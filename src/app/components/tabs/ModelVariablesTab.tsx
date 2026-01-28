@@ -69,6 +69,7 @@ const sectionDescriptions: Record<string, string> = {
 };
 
 export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
+  const HEADER_OFFSET = 160;
   const [searchQuery, setSearchQuery] = useState('');
   const [changedOnly, setChangedOnly] = useState(false);
   const [variables, setVariables] = useState(mockVariables);
@@ -79,6 +80,16 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const recalcTimeoutRef = useRef<number | null>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const scrollToSection = (section: string) => {
+    const node = sectionRefs.current[section];
+    if (!node) {
+      return;
+    }
+
+    const top = node.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
+    window.scrollTo({ top, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+  };
 
   const getSectionId = (section: string) =>
     section
@@ -453,10 +464,7 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
                     }`}
                     aria-current={isActive ? 'true' : undefined}
                     onClick={() => {
-                      sectionRefs.current[section]?.scrollIntoView({
-                        behavior: prefersReducedMotion ? 'auto' : 'smooth',
-                        block: 'start',
-                      });
+                      scrollToSection(section);
                       setActiveSection(section);
                     }}
                   >
