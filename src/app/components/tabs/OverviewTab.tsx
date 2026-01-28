@@ -11,6 +11,14 @@ interface OverviewTabProps {
   project: Project;
   onUpdateSiteTeam?: (siteTeam: SiteTeam) => void;
   onUpdateTrack?: (track: Track) => void;
+  lens?: 'executive' | 'practitioner';
+  trackMode?: 'preview' | 'edit';
+  selectedTrack?: Track;
+  previewTrack?: Track | null;
+  onPreviewTrack?: (track: Track) => void;
+  onApplyPreviewTrack?: () => void;
+  previewToast?: string | null;
+  outputsOverride?: Project['outputs'];
 }
 
 const emptySiteTeam: SiteTeam = {
@@ -21,7 +29,19 @@ const emptySiteTeam: SiteTeam = {
   taxSupport: [],
 };
 
-export function OverviewTab({ project, onUpdateSiteTeam, onUpdateTrack }: OverviewTabProps) {
+export function OverviewTab({
+  project,
+  onUpdateSiteTeam,
+  onUpdateTrack,
+  lens = 'practitioner',
+  trackMode = 'edit',
+  selectedTrack,
+  previewTrack,
+  onPreviewTrack,
+  onApplyPreviewTrack,
+  previewToast,
+  outputsOverride,
+}: OverviewTabProps) {
   const [isEditingSiteTeam, setIsEditingSiteTeam] = useState(false);
   const [draftSiteTeam, setDraftSiteTeam] = useState<SiteTeam>(project.meta?.siteTeam ?? emptySiteTeam);
   const tracks: Array<{ id: Track; title: string; description: string }> = [
@@ -29,7 +49,10 @@ export function OverviewTab({ project, onUpdateSiteTeam, onUpdateTrack }: Overvi
     { id: 2, title: 'Track 2: Fully Off-Grid Facility', description: 'Design standalone microgrid for complete energy independence' },
     { id: 3, title: 'Track 3: Isolate Critical Loads', description: 'Protect essential operations during grid outages' },
   ];
-  const selectedTrack = project.track ?? 1;
+  const activeTrack = selectedTrack ?? project.track ?? 1;
+  const isPreviewMode = trackMode === 'preview';
+  const isPreviewing = isPreviewMode && previewTrack && previewTrack !== (project.track ?? 1);
+  const isExecutiveLens = lens === 'executive';
 
   const updateDraft = (partial: Partial<SiteTeam>) => {
     setDraftSiteTeam((prev) => ({ ...prev, ...partial }));
@@ -308,14 +331,23 @@ export function OverviewTab({ project, onUpdateSiteTeam, onUpdateTrack }: Overvi
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h2 className="text-xl font-bold text-[var(--ef-black)] mb-2">Select Analysis Track</h2>
-          <p className="text-sm text-gray-600 mb-6">
-            Choose the track that best matches your project requirements. This affects visible modules and calculations.
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-[var(--ef-black)] mb-2">Select Analysis Track</h2>
+              <p className="text-sm text-gray-600">
+                Choose the track that best matches your project requirements. This affects visible modules and calculations.
+              </p>
+            </div>
+          </div>
+          {previewToast && (
+            <div className="sr-only" aria-live="polite">
+              {previewToast}
+            </div>
+          )}
           <div className="space-y-3">
             {tracks.map((track) => {
-              const isSelected = selectedTrack === track.id;
-              const isLocked = !onUpdateTrack;
+              const isSelected = activeTrack === track.id;
+              const isLocked = !onUpdateTrack && !isPreviewMode;
               return (
                 <motion.button
                   key={track.id}
@@ -323,10 +355,16 @@ export function OverviewTab({ project, onUpdateSiteTeam, onUpdateTrack }: Overvi
                     isSelected
                       ? 'border-[var(--ef-jade)] bg-[var(--ef-jade)]/5'
                       : 'border-gray-200 bg-white'
-                  } ${isLocked ? 'opacity-80 cursor-not-allowed' : 'hover:border-gray-300'}`}
+                  } ${isLocked ? 'opacity-80' : 'hover:border-gray-300 cursor-pointer'}`}
                   whileHover={isLocked ? undefined : { scale: 1.01 }}
                   whileTap={isLocked ? undefined : { scale: 0.99 }}
-                  onClick={() => onUpdateTrack?.(track.id)}
+                  onClick={() => {
+                    if (isPreviewMode) {
+                      onPreviewTrack?.(track.id);
+                      return;
+                    }
+                    onUpdateTrack?.(track.id);
+                  }}
                   aria-disabled={isLocked}
                 >
                   <div className="flex items-start gap-3">
@@ -338,7 +376,14 @@ export function OverviewTab({ project, onUpdateSiteTeam, onUpdateTrack }: Overvi
                       {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-[var(--ef-black)] mb-1">{track.title}</h3>
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="font-semibold text-[var(--ef-black)]">{track.title}</h3>
+                        {isPreviewing && previewTrack === track.id && (
+                          <span className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+                            Preview
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-600">{track.description}</p>
                     </div>
                   </div>
@@ -347,13 +392,32 @@ export function OverviewTab({ project, onUpdateSiteTeam, onUpdateTrack }: Overvi
             })}
           </div>
 
-          {selectedTrack && (
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-900">
-                <strong>Note:</strong> Track {selectedTrack} specific modules and guidance are now active.
-                {selectedTrack === 2 && ' Off-grid specific calculations are enabled.'}
-                {selectedTrack === 3 && ' Critical loads analysis tools are available.'}
-              </p>
+          <div className="mt-6 min-h-[72px]">
+            {isExecutiveLens ? (
+              <div
+                className={`rounded-lg border border-gray-200 bg-gray-50/80 px-4 py-3 text-sm text-gray-600 transition-opacity duration-200 ${
+                  isPreviewing ? 'opacity-100' : 'opacity-60'
+                }`}
+              >
+                {isPreviewing
+                  ? `Viewing Track ${previewTrack} scenario (preview). Results update live. Switch to Practitioner to persist changes.`
+                  : 'Viewing saved project scenario.'}
+              </div>
+            ) : (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-900">
+                  <strong>Note:</strong> Track {activeTrack} specific modules and guidance are now active.
+                  {activeTrack === 2 && ' Off-grid specific calculations are enabled.'}
+                  {activeTrack === 3 && ' Critical loads analysis tools are available.'}
+                </p>
+              </div>
+            )}
+          </div>
+          {isPreviewing && onApplyPreviewTrack && (
+            <div className="mt-4 flex justify-end">
+              <Button variant="outline" size="sm" onClick={onApplyPreviewTrack}>
+                Apply as default
+              </Button>
             </div>
           )}
         </motion.div>
@@ -389,7 +453,7 @@ export function OverviewTab({ project, onUpdateSiteTeam, onUpdateTrack }: Overvi
 
       {/* Right Column: Live Outputs Panel */}
       <div className="xl:col-span-1">
-        <LiveOutputsPanel project={project} />
+        <LiveOutputsPanel project={project} outputsOverride={outputsOverride} />
       </div>
     </div>
   );

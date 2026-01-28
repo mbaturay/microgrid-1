@@ -5,6 +5,7 @@ import { DollarSign, TrendingUp, Clock, Zap, PiggyBank, FileText } from 'lucide-
 
 interface LiveOutputsPanelProps {
   project: Project;
+  outputsOverride?: Project['outputs'];
   isRecalculating?: boolean;
   prefersReducedMotion?: boolean;
 }
@@ -23,10 +24,11 @@ const formatCurrencyShort = (value: number) => `$${(value / 1000).toFixed(0)}k`;
 
 export function LiveOutputsPanel({
   project,
+  outputsOverride,
   isRecalculating = false,
   prefersReducedMotion = false,
 }: LiveOutputsPanelProps) {
-  const outputs = project.outputs;
+  const outputs = outputsOverride ?? project.outputs;
   const outputGroups: { title: string; items: OutputMetric[] }[] = [
     {
       title: 'Financial',

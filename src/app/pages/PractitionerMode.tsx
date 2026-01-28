@@ -19,8 +19,12 @@ export function PractitionerMode() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const { lens, setLens } = useProjectLens();
+  const { lens } = useProjectLens();
   const isEditableLens = lens === 'practitioner';
+  const [previewTrack, setPreviewTrack] = useState<Project['track'] | null>(null);
+  const [previewToast, setPreviewToast] = useState<string | null>(null);
+  const previewToastRef = useRef<number | null>(null);
+  const actionTooltip = 'Switch to Practitioner to edit or export project';
   const [projects, setProjects] = useState<Project[]>(() =>
     mockProjects.map((project) => {
       const track = project.track ?? 1;
@@ -84,7 +88,27 @@ export function PractitionerMode() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
   }, [projects]);
 
+  useEffect(() => {
+    return () => {
+      if (previewToastRef.current) {
+        window.clearTimeout(previewToastRef.current);
+      }
+    };
+  }, []);
+
   const project = useMemo(() => projects.find((p) => p.id === projectId), [projects, projectId]);
+  const displayTrack = useMemo(() => {
+    if (!project) {
+      return 1;
+    }
+    return previewTrack ?? project.track ?? 1;
+  }, [project, previewTrack]);
+  const previewOutputs = useMemo(() => {
+    if (!project || isEditableLens || !previewTrack) {
+      return undefined;
+    }
+    return computeOutputs(project.variables, project.intervalData, previewTrack);
+  }, [project, isEditableLens, previewTrack]);
 
   const normalizeSiteTeam = (siteTeam: SiteTeam): SiteTeam => {
     const normalizeSingle = (value?: string) => value?.trim() || '';
@@ -135,6 +159,29 @@ export function PractitionerMode() {
       return;
     }
     updateProject({ ...project, track: track ?? 1 });
+  };
+
+  const handlePreviewTrack = (track: Project['track']) => {
+    if (!track) {
+      return;
+    }
+    setPreviewTrack(track);
+    setPreviewToast(`Previewing Track ${track} — outputs updated (temporary).`);
+    if (previewToastRef.current) {
+      window.clearTimeout(previewToastRef.current);
+    }
+    previewToastRef.current = window.setTimeout(() => {
+      setPreviewToast(null);
+    }, 1200);
+  };
+
+  const handleApplyPreviewTrack = () => {
+    if (!project || !previewTrack) {
+      return;
+    }
+    handleUpdateTrack(previewTrack);
+    setPreviewTrack(null);
+    setPreviewToast(null);
   };
 
   const handleUpdateVariables = (variables: VariableMap) => {
@@ -239,27 +286,56 @@ export function PractitionerMode() {
             </div>
             <div className="flex flex-col items-end gap-2">
               <div className="flex items-center gap-2">
-                <Button
-                  variant={isEditableLens ? 'outline' : 'default'}
-                  size="sm"
-                  className={isEditableLens ? '' : 'bg-[var(--ef-teal)] text-white hover:bg-[var(--ef-teal)]/90'}
-                  onClick={() => setLens(isEditableLens ? 'executive' : 'practitioner')}
-                  aria-pressed={isEditableLens}
+                <div
+                  className="flex items-center"
+                  title={isEditableLens ? undefined : actionTooltip}
+                  tabIndex={isEditableLens ? -1 : 0}
+                  aria-label={isEditableLens ? undefined : actionTooltip}
                 >
-                  {isEditableLens ? 'View as Executive' : 'Switch to Practitioner'}
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleImportProject}>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Import Project
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleExportProject}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Export Project
-                </Button>
-                <Button size="sm" className="bg-[var(--ef-jade)] hover:bg-[var(--ef-jade)]/90 text-white">
-                  <Save className="w-4 h-4 mr-2" />
-                  Save
-                </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleImportProject}
+                    disabled={!isEditableLens}
+                    aria-disabled={!isEditableLens}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Import Project
+                  </Button>
+                </div>
+                <div
+                  className="flex items-center"
+                  title={isEditableLens ? undefined : actionTooltip}
+                  tabIndex={isEditableLens ? -1 : 0}
+                  aria-label={isEditableLens ? undefined : actionTooltip}
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportProject}
+                    disabled={!isEditableLens}
+                    aria-disabled={!isEditableLens}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Project
+                  </Button>
+                </div>
+                <div
+                  className="flex items-center"
+                  title={isEditableLens ? undefined : actionTooltip}
+                  tabIndex={isEditableLens ? -1 : 0}
+                  aria-label={isEditableLens ? undefined : actionTooltip}
+                >
+                  <Button
+                    size="sm"
+                    className="bg-[var(--ef-jade)] hover:bg-[var(--ef-jade)]/90 text-white"
+                    disabled={!isEditableLens}
+                    aria-disabled={!isEditableLens}
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
+                  </Button>
+                </div>
               </div>
               <div className="text-[11px] text-gray-500">Includes all project inputs and settings.</div>
             </div>
@@ -364,6 +440,14 @@ export function PractitionerMode() {
               project={project}
               onUpdateSiteTeam={handleUpdateSiteTeam}
               onUpdateTrack={isEditableLens ? handleUpdateTrack : undefined}
+              lens={lens}
+              trackMode={isEditableLens ? 'edit' : 'preview'}
+              selectedTrack={isEditableLens ? project.track : displayTrack}
+              previewTrack={previewTrack}
+              onPreviewTrack={handlePreviewTrack}
+              onApplyPreviewTrack={isEditableLens ? undefined : handleApplyPreviewTrack}
+              previewToast={previewToast}
+              outputsOverride={previewOutputs}
             />
           </TabsContent>
 
