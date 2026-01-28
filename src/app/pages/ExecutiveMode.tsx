@@ -338,30 +338,12 @@ export function ExecutiveMode() {
             {showFiltersOnlyEmpty && (
               <div className="rounded-lg border border-dashed border-gray-200 bg-[var(--ef-light-2)] p-6 text-center space-y-2">
                 <div className="text-sm text-gray-700">No projects match the selected filters</div>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    clearStages();
-                    setSelectedRegion('All');
-                  }}
-                >
-                  Clear filters
-                </Button>
               </div>
             )}
             {showSearchAndFiltersEmpty && (
               <div className="rounded-lg border border-dashed border-gray-200 bg-[var(--ef-light-2)] p-6 text-center space-y-2">
                 <div className="text-sm text-gray-700">No projects match your search and filters</div>
                 <div className="text-xs text-gray-400">Try refining your search or clearing filters.</div>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    clearStages();
-                    setSelectedRegion('All');
-                  }}
-                >
-                  Clear filters
-                </Button>
               </div>
             )}
             {!showSearchOnlyEmpty && !showFiltersOnlyEmpty && !showSearchAndFiltersEmpty && (
