@@ -259,7 +259,7 @@ export function PractitionerMode() {
         transition={{ duration: 0.3 }}
       >
         <div className="max-w-[1920px] mx-auto px-8 py-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
@@ -271,49 +271,42 @@ export function PractitionerMode() {
                 Back to Portfolio
               </Button>
               <div className="h-6 w-px bg-gray-300" />
-              <div>
+              <div className="flex items-baseline gap-2">
                 <h1 className="text-2xl font-bold text-[var(--ef-black)]">{project.name}</h1>
-                <p className="text-sm text-gray-600">{project.location}</p>
+                <span className="text-sm text-gray-500">{project.location}</span>
               </div>
               <StageBadge stage={project.stage} />
             </div>
-            <ModeSwitch />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-500">
-              {project.lastSaved && `Last saved: ${project.lastSaved}`}
-            </div>
-            <div className="flex flex-col items-end gap-2 min-h-[54px]">
-              {isEditableLens && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleImportProject}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Import Project
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleExportProject}
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Export Project
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="bg-[var(--ef-jade)] hover:bg-[var(--ef-jade)]/90 text-white"
-                    >
-                      <Save className="w-4 h-4 mr-2" />
-                      Save
-                    </Button>
-                  </div>
-                  <div className="text-[11px] text-gray-500">Includes all project inputs and settings.</div>
-                </>
+            <div className="flex items-center gap-3 min-h-[36px]">
+              <ModeSwitch />
+              {isEditableLens ? (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleImportProject}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Import Project
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportProject}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Project
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-[var(--ef-jade)] hover:bg-[var(--ef-jade)]/90 text-white"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
+                  </Button>
+                </div>
+              ) : (
+                <div className="h-[32px]" aria-hidden="true" />
               )}
             </div>
           </div>
