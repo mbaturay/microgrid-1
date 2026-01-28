@@ -4,6 +4,18 @@ export type ProjectStage = 'Proposed' | 'Analysis' | 'Green Ink' | 'Construction
 export type Track = 1 | 2 | 3;
 export type ConfidenceBadge = 'computed' | 'partial' | 'stubbed';
 
+export type VariableValue = string | number | boolean;
+export type VariableMap = Record<string, VariableValue>;
+
+export interface ProjectOutputs {
+  npv: { value: number; confidence: ConfidenceBadge };
+  roi: { value: number; confidence: ConfidenceBadge };
+  payback: { value: number; confidence: ConfidenceBadge };
+  capex: { value: number; confidence: ConfidenceBadge };
+  annualSavings: { value: number; confidence: ConfidenceBadge };
+  totalTaxBenefit: { value: number; confidence: ConfidenceBadge };
+}
+
 export interface SiteTeam {
   avp?: string;
   agmm?: string;
@@ -34,6 +46,9 @@ export interface Project {
   track?: Track;
   lastSaved?: string;
   meta?: ProjectMeta;
+  variables?: VariableMap;
+  intervalData?: unknown;
+  outputs?: ProjectOutputs;
 }
 
 export const mockProjects: Project[] = [

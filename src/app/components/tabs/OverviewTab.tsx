@@ -10,6 +10,7 @@ import { LiveOutputsPanel } from '@/app/components/LiveOutputsPanel';
 interface OverviewTabProps {
   project: Project;
   onUpdateSiteTeam?: (siteTeam: SiteTeam) => void;
+  onUpdateTrack?: (track: Track) => void;
 }
 
 const emptySiteTeam: SiteTeam = {
@@ -20,7 +21,7 @@ const emptySiteTeam: SiteTeam = {
   taxSupport: [],
 };
 
-export function OverviewTab({ project, onUpdateSiteTeam }: OverviewTabProps) {
+export function OverviewTab({ project, onUpdateSiteTeam, onUpdateTrack }: OverviewTabProps) {
   const [isEditingSiteTeam, setIsEditingSiteTeam] = useState(false);
   const [draftSiteTeam, setDraftSiteTeam] = useState<SiteTeam>(project.meta?.siteTeam ?? emptySiteTeam);
   const tracks: Array<{ id: Track; title: string; description: string }> = [
@@ -28,6 +29,7 @@ export function OverviewTab({ project, onUpdateSiteTeam }: OverviewTabProps) {
     { id: 2, title: 'Track 2: Fully Off-Grid Facility', description: 'Design standalone microgrid for complete energy independence' },
     { id: 3, title: 'Track 3: Isolate Critical Loads', description: 'Protect essential operations during grid outages' },
   ];
+  const selectedTrack = project.track ?? 1;
 
   const updateDraft = (partial: Partial<SiteTeam>) => {
     setDraftSiteTeam((prev) => ({ ...prev, ...partial }));
@@ -312,7 +314,7 @@ export function OverviewTab({ project, onUpdateSiteTeam }: OverviewTabProps) {
           </p>
           <div className="space-y-3">
             {tracks.map((track) => {
-              const isSelected = project.track === track.id;
+              const isSelected = selectedTrack === track.id;
               return (
                 <motion.button
                   key={track.id}
@@ -323,6 +325,7 @@ export function OverviewTab({ project, onUpdateSiteTeam }: OverviewTabProps) {
                   }`}
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
+                  onClick={() => onUpdateTrack?.(track.id)}
                 >
                   <div className="flex items-start gap-3">
                     <div
@@ -342,12 +345,12 @@ export function OverviewTab({ project, onUpdateSiteTeam }: OverviewTabProps) {
             })}
           </div>
 
-          {project.track && (
+          {selectedTrack && (
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-900">
-                <strong>Note:</strong> Track {project.track} specific modules and guidance are now active.
-                {project.track === 2 && ' Off-grid specific calculations are enabled.'}
-                {project.track === 3 && ' Critical loads analysis tools are available.'}
+                <strong>Note:</strong> Track {selectedTrack} specific modules and guidance are now active.
+                {selectedTrack === 2 && ' Off-grid specific calculations are enabled.'}
+                {selectedTrack === 3 && ' Critical loads analysis tools are available.'}
               </p>
             </div>
           )}

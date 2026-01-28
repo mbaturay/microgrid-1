@@ -4,20 +4,30 @@ import { motion } from 'motion/react';
 import { ArrowLeft, Download, Upload, Save } from 'lucide-react';
 import { ModeSwitch } from '@/app/components/ModeSwitch';
 import { StageBadge } from '@/app/components/StageBadge';
-import { mockProjects, type Project, type SiteTeam } from '@/app/data/mockData';
+import { mockProjects, type Project, type SiteTeam, type VariableMap } from '@/app/data/mockData';
 import { Button } from '@/app/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { OverviewTab } from '@/app/components/tabs/OverviewTab';
 import { ModelVariablesTab } from '@/app/components/tabs/ModelVariablesTab';
 import { IntervalDataTab } from '@/app/components/tabs/IntervalDataTab';
 import { OutputsTab } from '@/app/components/tabs/OutputsTab';
+import { computeOutputs } from '@/app/lib/projectCalculator';
 
 export function PractitionerMode() {
   const STORAGE_KEY = 'microgrid-projects';
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const [projects, setProjects] = useState<Project[]>(mockProjects);
+  const [projects, setProjects] = useState<Project[]>(() =>
+    mockProjects.map((project) => {
+      const track = project.track ?? 1;
+      return {
+        ...project,
+        track,
+        outputs: computeOutputs(project.variables, project.intervalData, track),
+      };
+    })
+  );
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -36,17 +46,25 @@ export function PractitionerMode() {
       const merged = mockProjects.map((project) => {
         const storedProject = storedById.get(project.id);
         if (!storedProject) {
-          return project;
+          const track = project.track ?? 1;
+          return {
+            ...project,
+            track,
+            outputs: computeOutputs(project.variables, project.intervalData, track),
+          };
         }
 
+        const track = storedProject.track ?? project.track ?? 1;
         return {
           ...project,
           ...storedProject,
+          track,
           meta: {
             ...project.meta,
             ...storedProject.meta,
             siteTeam: storedProject.meta?.siteTeam ?? project.meta?.siteTeam,
           },
+          outputs: computeOutputs(storedProject.variables ?? project.variables, storedProject.intervalData ?? project.intervalData, track),
         };
       });
       setProjects(merged);
@@ -89,7 +107,10 @@ export function PractitionerMode() {
   };
 
   const updateProject = (nextProject: Project) => {
-    setProjects((prev) => prev.map((item) => (item.id === nextProject.id ? nextProject : item)));
+    const track = nextProject.track ?? 1;
+    const outputs = computeOutputs(nextProject.variables, nextProject.intervalData, track);
+    const withOutputs = { ...nextProject, track, outputs };
+    setProjects((prev) => prev.map((item) => (item.id === withOutputs.id ? withOutputs : item)));
   };
 
   const handleUpdateSiteTeam = (siteTeam: SiteTeam) => {
@@ -104,6 +125,20 @@ export function PractitionerMode() {
         siteTeam: normalized,
       },
     });
+  };
+
+  const handleUpdateTrack = (track: Project['track']) => {
+    if (!project) {
+      return;
+    }
+    updateProject({ ...project, track: track ?? 1 });
+  };
+
+  const handleUpdateVariables = (variables: VariableMap) => {
+    if (!project) {
+      return;
+    }
+    updateProject({ ...project, variables });
   };
 
   const handleExportProject = () => {
@@ -138,6 +173,7 @@ export function PractitionerMode() {
         ...project,
         ...imported,
         id: project.id,
+        track: imported.track ?? project.track ?? 1,
         meta: {
           ...project.meta,
           ...imported.meta,
@@ -282,7 +318,11 @@ export function PractitionerMode() {
           </TabsList>
 
           <TabsContent value="overview">
-            <OverviewTab project={project} onUpdateSiteTeam={handleUpdateSiteTeam} />
+            <OverviewTab
+              project={project}
+              onUpdateSiteTeam={handleUpdateSiteTeam}
+              onUpdateTrack={handleUpdateTrack}
+            />
           </TabsContent>
 
           <TabsContent value="budget">
@@ -298,7 +338,11 @@ export function PractitionerMode() {
           </TabsContent>
 
           <TabsContent value="model-variables">
-            <ModelVariablesTab project={project} />
+            <ModelVariablesTab
+              project={project}
+              variables={project.variables}
+              onUpdateVariables={handleUpdateVariables}
+            />
           </TabsContent>
 
           <TabsContent value="interval-data">

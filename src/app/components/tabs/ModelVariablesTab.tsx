@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Project } from '@/app/data/mockData';
+import { Project, type VariableMap } from '@/app/data/mockData';
 import { LiveOutputsPanel } from '@/app/components/LiveOutputsPanel';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
@@ -11,6 +11,8 @@ import { motion } from 'motion/react';
 
 interface ModelVariablesTabProps {
   project: Project;
+  variables?: VariableMap;
+  onUpdateVariables?: (variables: VariableMap) => void;
 }
 
 interface ModelVariable {
@@ -68,11 +70,16 @@ const sectionDescriptions: Record<string, string> = {
   'Operations & Maintenance': 'Ongoing costs and coverage assumptions.',
 };
 
-export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
+export function ModelVariablesTab({ project, variables, onUpdateVariables }: ModelVariablesTabProps) {
   const HEADER_OFFSET = 160;
   const [searchQuery, setSearchQuery] = useState('');
   const [changedOnly, setChangedOnly] = useState(false);
-  const [variables, setVariables] = useState(mockVariables);
+  const [variablesState, setVariablesState] = useState(() =>
+    mockVariables.map((variable) => ({
+      ...variable,
+      value: variables?.[variable.id] ?? variable.value,
+    }))
+  );
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [highlightedIds, setHighlightedIds] = useState<string[]>([]);
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -115,6 +122,29 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
       mockVariables.map((variable) => [variable.id, variable.defaultValue ?? variable.value])
     );
   }, []);
+
+  useEffect(() => {
+    if (!variables) {
+      return;
+    }
+    setVariablesState(
+      mockVariables.map((variable) => ({
+        ...variable,
+        value: variables[variable.id] ?? variable.value,
+      }))
+    );
+  }, [variables]);
+
+  useEffect(() => {
+    if (variables || !onUpdateVariables) {
+      return;
+    }
+    const defaults: VariableMap = {};
+    mockVariables.forEach((variable) => {
+      defaults[variable.id] = variable.value;
+    });
+    onUpdateVariables(defaults);
+  }, [variables, onUpdateVariables]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -220,9 +250,9 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
     };
   }, []);
 
-  const sections = Array.from(new Set(variables.map((v) => v.section)));
+  const sections = Array.from(new Set(variablesState.map((v) => v.section)));
 
-  const filteredVariables = variables.filter((variable) => {
+  const filteredVariables = variablesState.filter((variable) => {
     const matchesSearch =
       variable.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
       variable.section.toLowerCase().includes(searchQuery.toLowerCase());
@@ -243,14 +273,14 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
 
   const sectionChangeCounts = useMemo(() => {
     const counts = new Map<string, number>();
-    variables.forEach((variable) => {
+    variablesState.forEach((variable) => {
       if (!isChanged(variable)) {
         return;
       }
       counts.set(variable.section, (counts.get(variable.section) ?? 0) + 1);
     });
     return counts;
-  }, [variables]);
+  }, [variablesState]);
 
   useEffect(() => {
     if (filteredSections.length === 0) {
@@ -287,16 +317,22 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
   }, [filteredSections, activeSection]);
 
   const handleVariableChange = (id: string, value: any) => {
-    setVariables((prev) =>
-      prev.map((variable) => {
+    setVariablesState((prev) => {
+      const next = prev.map((variable) => {
         if (variable.id !== id) {
           return variable;
         }
 
         const nextValue = normalizeValue(variable, value);
         return { ...variable, value: nextValue };
-      })
-    );
+      });
+      const nextVariables: VariableMap = {};
+      next.forEach((variable) => {
+        nextVariables[variable.id] = variable.value;
+      });
+      onUpdateVariables?.(nextVariables);
+      return next;
+    });
     triggerRecalc();
   };
 
@@ -305,13 +341,23 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
     if (defaultValue === undefined) {
       return;
     }
-    setVariables((prev) => prev.map((variable) => (variable.id === id ? { ...variable, value: defaultValue } : variable)));
+    setVariablesState((prev) => {
+      const next = prev.map((variable) =>
+        variable.id === id ? { ...variable, value: defaultValue } : variable
+      );
+      const nextVariables: VariableMap = {};
+      next.forEach((variable) => {
+        nextVariables[variable.id] = variable.value;
+      });
+      onUpdateVariables?.(nextVariables);
+      return next;
+    });
     triggerRecalc();
   };
 
   const resetSection = (section: string) => {
-    setVariables((prev) =>
-      prev.map((variable) => {
+    setVariablesState((prev) => {
+      const next = prev.map((variable) => {
         if (variable.section !== section) {
           return variable;
         }
@@ -320,13 +366,19 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
           return variable;
         }
         return { ...variable, value: defaultValue };
-      })
-    );
+      });
+      const nextVariables: VariableMap = {};
+      next.forEach((variable) => {
+        nextVariables[variable.id] = variable.value;
+      });
+      onUpdateVariables?.(nextVariables);
+      return next;
+    });
     triggerRecalc();
   };
 
   const handleImportVariables = () => {
-    const updatedIds = variables.map((variable) => variable.id);
+    const updatedIds = variablesState.map((variable) => variable.id);
     setHighlightedIds(updatedIds);
     setImportMessage(`${updatedIds.length} variables updated`);
     window.setTimeout(() => {

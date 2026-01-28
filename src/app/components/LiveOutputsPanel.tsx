@@ -16,37 +16,43 @@ interface OutputMetric {
   icon: React.ElementType;
 }
 
+const formatCurrency = (value: number, decimals = 2) =>
+  `$${(value / 1000000).toFixed(decimals)}M`;
+
+const formatCurrencyShort = (value: number) => `$${(value / 1000).toFixed(0)}k`;
+
 export function LiveOutputsPanel({
   project,
   isRecalculating = false,
   prefersReducedMotion = false,
 }: LiveOutputsPanelProps) {
+  const outputs = project.outputs;
   const outputGroups: { title: string; items: OutputMetric[] }[] = [
     {
       title: 'Financial',
       items: [
         {
           label: 'NPV',
-          value: `$${(project.npv / 1000000).toFixed(2)}M`,
-          confidence: 'computed',
+          value: outputs ? formatCurrency(outputs.npv.value) : `$${(project.npv / 1000000).toFixed(2)}M`,
+          confidence: outputs?.npv.confidence ?? 'computed',
           icon: DollarSign,
         },
         {
           label: 'ROI',
-          value: `${project.roi}%`,
-          confidence: 'computed',
+          value: outputs ? `${outputs.roi.value.toFixed(1)}%` : `${project.roi}%`,
+          confidence: outputs?.roi.confidence ?? 'computed',
           icon: TrendingUp,
         },
         {
           label: 'Payback',
-          value: `${project.payback} years`,
-          confidence: 'computed',
+          value: outputs ? `${outputs.payback.value.toFixed(1)} years` : `${project.payback} years`,
+          confidence: outputs?.payback.confidence ?? 'computed',
           icon: Clock,
         },
         {
           label: 'CapEx',
-          value: `$${(project.totalInvestment / 1000000).toFixed(2)}M`,
-          confidence: 'partial',
+          value: outputs ? formatCurrency(outputs.capex.value) : `$${(project.totalInvestment / 1000000).toFixed(2)}M`,
+          confidence: outputs?.capex.confidence ?? 'partial',
           icon: PiggyBank,
         },
       ],
@@ -56,8 +62,8 @@ export function LiveOutputsPanel({
       items: [
         {
           label: 'Annual Savings',
-          value: `$${(project.annualSavings / 1000).toFixed(0)}k`,
-          confidence: 'computed',
+          value: outputs ? formatCurrencyShort(outputs.annualSavings.value) : `$${(project.annualSavings / 1000).toFixed(0)}k`,
+          confidence: outputs?.annualSavings.confidence ?? 'computed',
           icon: Zap,
         },
       ],
@@ -67,8 +73,8 @@ export function LiveOutputsPanel({
       items: [
         {
           label: 'Total Tax Benefit',
-          value: `$${(project.totalTaxBenefit / 1000000).toFixed(2)}M`,
-          confidence: 'stubbed',
+          value: outputs ? formatCurrency(outputs.totalTaxBenefit.value) : `$${(project.totalTaxBenefit / 1000000).toFixed(2)}M`,
+          confidence: outputs?.totalTaxBenefit.confidence ?? 'stubbed',
           icon: FileText,
         },
       ],
