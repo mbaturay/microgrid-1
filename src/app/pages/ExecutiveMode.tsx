@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { Search, TrendingUp, Zap, DollarSign, Target, Clock } from 'lucide-react';
 import { ModeSwitch } from '@/app/components/ModeSwitch';
+import { useProjectLens } from '@/app/lib/ProjectLensContext';
 import { KPICard } from '@/app/components/KPICard';
 import { Skeleton } from '@/app/components/ui/skeleton';
 import { mockProjects, portfolioStats, pipelineCounts, ProjectStage } from '@/app/data/mockData';
@@ -15,6 +16,7 @@ const dynamic = <T extends ComponentType<any>>(loader: () => Promise<{ default: 
 const PortfolioMap = dynamic(() => import('@/app/components/executive/PortfolioMap'));
 
 export function ExecutiveMode() {
+  const { lens } = useProjectLens();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStages, setSelectedStages] = useState<Stage[]>([]);
@@ -129,7 +131,22 @@ export function ExecutiveMode() {
               <h1 className="text-2xl font-bold text-[var(--ef-black)] mb-1">Solar ROI Portfolio</h1>
               <p className="text-sm text-gray-600">Executive Dashboard</p>
             </div>
-            <ModeSwitch />
+            <div className="flex items-center gap-3 min-h-[36px]">
+              <ModeSwitch />
+              {lens === 'practitioner' && (
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm">
+                    Import Project
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Export Project
+                  </Button>
+                  <Button size="sm" className="bg-[#03454D] hover:bg-[#03454D]/90 text-white">
+                    Save
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </motion.header>

@@ -238,7 +238,8 @@ export function PractitionerMode() {
     }
   };
 
-  if (!project) {
+  // Only show error if projectId exists and lookup fails
+  if (projectId && !project) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -247,6 +248,10 @@ export function PractitionerMode() {
         </div>
       </div>
     );
+  }
+  // If projectId is missing, do not show error (per requirements)
+  if (!projectId) {
+    return null;
   }
 
   return (

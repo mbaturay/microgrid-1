@@ -182,7 +182,7 @@ export default function PortfolioMap({
       return;
     }
 
-    setHasInteracted(window.sessionStorage.getItem('portfolioMapInteracted') === 'true');
+    setHasInteracted(false);
   }, []);
 
   useEffect(() => {
@@ -275,7 +275,7 @@ export default function PortfolioMap({
             if (!hasInteracted) {
               setHasInteracted(true);
               if (typeof window !== 'undefined') {
-                window.sessionStorage.setItem('portfolioMapInteracted', 'true');
+                // Removed sessionStorage persistence for interaction
               }
             }
           }}

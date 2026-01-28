@@ -1,14 +1,14 @@
 import { createBrowserRouter } from "react-router";
-import { ExecutiveMode } from "@/app/pages/ExecutiveMode";
-import { PractitionerMode } from "@/app/pages/PractitionerMode";
+import { PortfolioPage } from "@/app/pages/PortfolioPage";
+import { ProjectPage } from "@/app/pages/ProjectPage";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: ExecutiveMode,
+    Component: PortfolioPage,
   },
   {
     path: "/project/:projectId",
-    Component: PractitionerMode,
+    Component: ProjectPage,
   },
 ]);
