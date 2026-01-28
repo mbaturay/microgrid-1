@@ -5,6 +5,7 @@ import { Search, TrendingUp, Zap, DollarSign, Target, Clock } from 'lucide-react
 import { ModeSwitch } from '@/app/components/ModeSwitch';
 import { KPICard } from '@/app/components/KPICard';
 import { mockProjects, portfolioStats, pipelineCounts, ProjectStage } from '@/app/data/mockData';
+import { STAGES, getStageTheme, type Stage } from '@/app/lib/stageStyles';
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
 import { ProjectsList } from '@/app/components/executive/ProjectsList';
@@ -15,13 +16,12 @@ const PortfolioMap = dynamic(() => import('@/app/components/executive/PortfolioM
 export function ExecutiveMode() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStage, setSelectedStage] = useState<ProjectStage | 'All'>('All');
+  const [selectedStage, setSelectedStage] = useState<Stage>('All');
   const [selectedRegion, setSelectedRegion] = useState<string>('All');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);
   const [hoverSource, setHoverSource] = useState<'map' | 'list' | null>(null);
 
-  const stages: Array<ProjectStage | 'All'> = ['All', 'Proposed', 'Analysis', 'Green Ink', 'Construction', 'Complete'];
   const regions = ['All', ...Array.from(new Set(mockProjects.map(p => p.location)))].sort();
 
   // Filter projects
@@ -106,20 +106,21 @@ export function ExecutiveMode() {
         >
           <h3 className="font-semibold text-lg text-[var(--ef-black)] mb-4">Pipeline Stages</h3>
           <div className="flex gap-2 sm:gap-3 flex-wrap">
-            {stages.map((stage) => {
+            {STAGES.map((stage) => {
               const count = stage === 'All' 
                 ? portfolioStats.totalProjects 
                 : pipelineCounts[stage as ProjectStage];
               const isActive = selectedStage === stage;
+              const theme = getStageTheme(stage);
 
               return (
                 <button
                   key={stage}
                   onClick={() => setSelectedStage(stage)}
-                  className={`px-3 sm:px-4 py-3 rounded-lg border-2 transition-all flex-1 sm:flex-initial min-w-[120px] ${
+                  className={`px-3 sm:px-4 py-3 rounded-lg transition-all flex-1 sm:flex-initial min-w-[120px] ${theme.tileClass} ${
                     isActive
-                      ? 'border-[var(--ef-jade)] bg-[var(--ef-jade)]/5'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                      ? `ring-2 ${theme.ringClass}`
+                      : 'hover:shadow-sm'
                   }`}
                 >
                   <div className="text-xs font-semibold text-gray-600 mb-1">{stage}</div>

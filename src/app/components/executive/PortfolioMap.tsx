@@ -6,6 +6,7 @@ import L from 'leaflet';
 import { RefreshCcw } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import type { Project } from '@/app/data/mockData';
+import { STAGES, getStageTheme } from '@/app/lib/stageStyles';
 
 interface PortfolioMapProps {
   projects: Project[];
@@ -49,13 +50,7 @@ function EnableScrollOnClick({
   return null;
 }
 
-const legendStages = [
-  { label: 'Proposed', color: 'bg-gray-300' },
-  { label: 'Analysis', color: 'bg-blue-500' },
-  { label: 'Green Ink', color: 'bg-[var(--ef-jade)]' },
-  { label: 'Construction', color: 'bg-[var(--ef-yellow)]' },
-  { label: 'Complete', color: 'bg-green-500' },
-];
+const legendStages = STAGES.filter((stage) => stage !== 'All');
 
 export default function PortfolioMap({
   projects,
@@ -121,12 +116,18 @@ export default function PortfolioMap({
       <div className="absolute left-3 top-3 z-[500] rounded-lg border border-gray-200 bg-white/90 px-3 py-2 text-xs shadow-sm backdrop-blur">
         <div className="text-[11px] font-semibold text-gray-500 mb-2">Stages</div>
         <div className="space-y-1">
-          {legendStages.map((stage) => (
-            <div key={stage.label} className="flex items-center gap-2 text-gray-600">
-              <span className={`h-2.5 w-2.5 rounded-full ${stage.color}`} />
-              <span>{stage.label}</span>
-            </div>
-          ))}
+          {legendStages.map((stage) => {
+            const theme = getStageTheme(stage);
+            return (
+              <div key={stage} className="flex items-center gap-2 text-gray-600">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: theme.dotColor }}
+                />
+                <span>{theme.label}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
       <button
@@ -177,8 +178,10 @@ export default function PortfolioMap({
           const isSelected = project.id === selectedProjectId;
           const isHovered = project.id === hoveredProjectId;
           const isActive = isSelected || isHovered;
-          const color = isSelected ? 'var(--ef-jade)' : isHovered ? 'var(--ef-teal)' : '#0f766e';
-          const radius = isSelected ? 12 : isHovered ? 9 : 8;
+          const theme = getStageTheme(project.stage);
+          const color = theme.dotColor;
+          const radius = isSelected ? 11 : isHovered ? 9 : 8;
+          const weight = isSelected ? 4 : isHovered ? 3 : 2;
 
           return (
             <CircleMarker
@@ -189,7 +192,7 @@ export default function PortfolioMap({
                 color,
                 fillColor: color,
                 fillOpacity: 0.9,
-                weight: isActive ? 3 : 2,
+                weight,
                 className: isHovered && !isSelected ? 'portfolio-map__marker-hover' : '',
               }}
               eventHandlers={{
