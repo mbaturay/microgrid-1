@@ -65,19 +65,22 @@ export function PractitionerMode() {
             <div className="text-sm text-gray-500">
               {project.lastSaved && `Last saved: ${project.lastSaved}`}
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
-                <Upload className="w-4 h-4 mr-2" />
-                Import JSON
-              </Button>
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Export JSON
-              </Button>
-              <Button size="sm" className="bg-[var(--ef-jade)] hover:bg-[var(--ef-jade)]/90 text-white">
-                <Save className="w-4 h-4 mr-2" />
-                Save
-              </Button>
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm">
+                  <Upload className="w-4 h-4 mr-2" />
+                  Import Project
+                </Button>
+                <Button variant="outline" size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export Project
+                </Button>
+                <Button size="sm" className="bg-[var(--ef-jade)] hover:bg-[var(--ef-jade)]/90 text-white">
+                  <Save className="w-4 h-4 mr-2" />
+                  Save
+                </Button>
+              </div>
+              <div className="text-[11px] text-gray-500">Includes all project inputs and settings.</div>
             </div>
           </div>
         </div>
