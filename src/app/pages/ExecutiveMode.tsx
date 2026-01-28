@@ -1,4 +1,5 @@
 import { useState, useMemo, Suspense, lazy, type ComponentType, useEffect } from 'react';
+import logo from '../../../Logo.svg';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { Search, TrendingUp, Zap, DollarSign, Target, Clock } from 'lucide-react';
@@ -127,9 +128,14 @@ export function ExecutiveMode() {
       >
         <div className="max-w-[1920px] mx-auto px-8 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-[var(--ef-black)] mb-1">Solar ROI Portfolio</h1>
-              <p className="text-sm text-gray-600">Executive Dashboard</p>
+            <div className="flex items-center gap-4">
+              <a href="/" className="mr-4 flex items-center" style={{ lineHeight: 0 }}>
+                <img src={logo} alt="Logo" style={{ height: 32, width: 'auto', display: 'block' }} />
+              </a>
+              <div>
+                <h1 className="text-2xl font-bold text-[var(--ef-black)] mb-1">Solar ROI Portfolio</h1>
+                <p className="text-sm text-gray-600">Executive Dashboard</p>
+              </div>
             </div>
             <div className="flex items-center gap-3 min-h-[36px]">
               <ModeSwitch />

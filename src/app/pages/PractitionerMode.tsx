@@ -1,4 +1,5 @@
 import { type ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
+import logo from '../../../Logo.svg';
 import { useParams, useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { ArrowLeft, Download, Lock, Upload, Save } from 'lucide-react';
@@ -266,11 +267,14 @@ export function PractitionerMode() {
         <div className="max-w-[1920px] mx-auto px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <a href="/" className="mr-4 flex items-center" style={{ lineHeight: 0 }}>
+                <img src={logo} alt="Logo" style={{ height: 32, width: 'auto', display: 'block' }} />
+              </a>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/')}
-                    className="text-[#03454D]"
+                className="text-[#03454D]"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Portfolio
