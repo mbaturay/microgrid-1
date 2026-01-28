@@ -1,7 +1,7 @@
 import { type ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { motion } from 'motion/react';
-import { ArrowLeft, Download, Upload, Save } from 'lucide-react';
+import { ArrowLeft, Download, Lock, Upload, Save } from 'lucide-react';
 import { ModeSwitch } from '@/app/components/ModeSwitch';
 import { StageBadge } from '@/app/components/StageBadge';
 import { mockProjects, type Project, type SiteTeam, type VariableMap } from '@/app/data/mockData';
@@ -12,12 +12,15 @@ import { ModelVariablesTab } from '@/app/components/tabs/ModelVariablesTab';
 import { IntervalDataTab } from '@/app/components/tabs/IntervalDataTab';
 import { OutputsTab } from '@/app/components/tabs/OutputsTab';
 import { computeOutputs } from '@/app/lib/projectCalculator';
+import { useProjectLens } from '@/app/lib/ProjectLensContext';
 
 export function PractitionerMode() {
   const STORAGE_KEY = 'microgrid-projects';
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const { lens, setLens } = useProjectLens();
+  const isEditableLens = lens === 'practitioner';
   const [projects, setProjects] = useState<Project[]>(() =>
     mockProjects.map((project) => {
       const track = project.track ?? 1;
@@ -236,6 +239,15 @@ export function PractitionerMode() {
             </div>
             <div className="flex flex-col items-end gap-2">
               <div className="flex items-center gap-2">
+                <Button
+                  variant={isEditableLens ? 'outline' : 'default'}
+                  size="sm"
+                  className={isEditableLens ? '' : 'bg-[var(--ef-teal)] text-white hover:bg-[var(--ef-teal)]/90'}
+                  onClick={() => setLens(isEditableLens ? 'executive' : 'practitioner')}
+                  aria-pressed={isEditableLens}
+                >
+                  {isEditableLens ? 'View as Executive' : 'Switch to Practitioner'}
+                </Button>
                 <Button variant="outline" size="sm" onClick={handleImportProject}>
                   <Upload className="w-4 h-4 mr-2" />
                   Import Project
@@ -275,39 +287,69 @@ export function PractitionerMode() {
             </TabsTrigger>
             <TabsTrigger 
               value="budget"
+              disabled={!isEditableLens}
+              aria-disabled={!isEditableLens}
               className="data-[state=active]:bg-[var(--ef-jade)] data-[state=active]:text-white data-[state=active]:shadow-md"
             >
-              Budget
+              <span className="flex items-center gap-2">
+                Budget
+                {!isEditableLens && <Lock className="h-3 w-3" />}
+              </span>
             </TabsTrigger>
             <TabsTrigger 
               value="model-variables"
+              disabled={!isEditableLens}
+              aria-disabled={!isEditableLens}
               className="data-[state=active]:bg-[var(--ef-jade)] data-[state=active]:text-white data-[state=active]:shadow-md"
             >
-              Model Variables
+              <span className="flex items-center gap-2">
+                Model Variables
+                {!isEditableLens && <Lock className="h-3 w-3" />}
+              </span>
             </TabsTrigger>
             <TabsTrigger 
               value="interval-data"
+              disabled={!isEditableLens}
+              aria-disabled={!isEditableLens}
               className="data-[state=active]:bg-[var(--ef-jade)] data-[state=active]:text-white data-[state=active]:shadow-md"
             >
-              Interval Data
+              <span className="flex items-center gap-2">
+                Interval Data
+                {!isEditableLens && <Lock className="h-3 w-3" />}
+              </span>
             </TabsTrigger>
             <TabsTrigger 
               value="utility-baseline"
+              disabled={!isEditableLens}
+              aria-disabled={!isEditableLens}
               className="data-[state=active]:bg-[var(--ef-jade)] data-[state=active]:text-white data-[state=active]:shadow-md"
             >
-              Utility Baseline
+              <span className="flex items-center gap-2">
+                Utility Baseline
+                {!isEditableLens && <Lock className="h-3 w-3" />}
+              </span>
             </TabsTrigger>
             <TabsTrigger 
               value="solar-baseline"
+              disabled={!isEditableLens}
+              aria-disabled={!isEditableLens}
               className="data-[state=active]:bg-[var(--ef-jade)] data-[state=active]:text-white data-[state=active]:shadow-md"
             >
-              Solar Baseline
+              <span className="flex items-center gap-2">
+                Solar Baseline
+                {!isEditableLens && <Lock className="h-3 w-3" />}
+              </span>
             </TabsTrigger>
             <TabsTrigger 
               value="consumption"
+              disabled={!isEditableLens}
+              aria-disabled={!isEditableLens}
               className="data-[state=active]:bg-[var(--ef-jade)] data-[state=active]:text-white data-[state=active]:shadow-md"
             >
-              Consumption
+              <span className="flex items-center gap-2">
+                Consumption
+                {!isEditableLens && <Lock className="h-3 w-3" />}
+              </span>
             </TabsTrigger>
             <TabsTrigger 
               value="outputs"
@@ -321,39 +363,62 @@ export function PractitionerMode() {
             <OverviewTab
               project={project}
               onUpdateSiteTeam={handleUpdateSiteTeam}
-              onUpdateTrack={handleUpdateTrack}
+              onUpdateTrack={isEditableLens ? handleUpdateTrack : undefined}
             />
           </TabsContent>
 
           <TabsContent value="budget">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-              <h2 className="text-xl font-bold text-[var(--ef-black)] mb-6">Budget Intake</h2>
-              <p className="text-gray-600 mb-6">
-                Edit budget inputs here. Calculated tables below are read-only.
-              </p>
-              <div className="text-center py-12 text-gray-400">
-                Budget form placeholder - editable fields for budget intake
+            {isEditableLens ? (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                <h2 className="text-xl font-bold text-[var(--ef-black)] mb-6">Budget Intake</h2>
+                <p className="text-gray-600 mb-6">
+                  Edit budget inputs here. Calculated tables below are read-only.
+                </p>
+                <div className="text-center py-12 text-gray-400">
+                  Budget form placeholder - editable fields for budget intake
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                <h2 className="text-xl font-bold text-[var(--ef-black)] mb-2">Budget Intake</h2>
+                <p className="text-sm text-gray-600">Switch to Practitioner to edit budget inputs.</p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="model-variables">
-            <ModelVariablesTab
-              project={project}
-              variables={project.variables}
-              onUpdateVariables={handleUpdateVariables}
-            />
+            {isEditableLens ? (
+              <ModelVariablesTab
+                project={project}
+                variables={project.variables}
+                onUpdateVariables={handleUpdateVariables}
+              />
+            ) : (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                <h2 className="text-xl font-bold text-[var(--ef-black)] mb-2">Model Variables</h2>
+                <p className="text-sm text-gray-600">Switch to Practitioner to edit model variables.</p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="interval-data">
-            <IntervalDataTab project={project} />
+            {isEditableLens ? (
+              <IntervalDataTab project={project} />
+            ) : (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                <h2 className="text-xl font-bold text-[var(--ef-black)] mb-2">Interval Data</h2>
+                <p className="text-sm text-gray-600">Switch to Practitioner to upload or edit interval data.</p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="utility-baseline">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
               <h2 className="text-xl font-bold text-[var(--ef-black)] mb-6">Utility Baseline</h2>
               <p className="text-gray-600 mb-6">
-                Read-only calculated utility baseline data. Edit Model Variables to adjust.
+                {isEditableLens
+                  ? 'Read-only calculated utility baseline data. Edit Model Variables to adjust.'
+                  : 'Switch to Practitioner to edit inputs that affect utility baseline.'}
               </p>
               <div className="text-center py-12 text-gray-400">
                 Utility baseline tables - read-only with lock icons
@@ -365,7 +430,9 @@ export function PractitionerMode() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
               <h2 className="text-xl font-bold text-[var(--ef-black)] mb-6">Solar Baseline</h2>
               <p className="text-gray-600 mb-6">
-                Read-only calculated solar baseline data. Edit Model Variables to adjust.
+                {isEditableLens
+                  ? 'Read-only calculated solar baseline data. Edit Model Variables to adjust.'
+                  : 'Switch to Practitioner to edit inputs that affect solar baseline.'}
               </p>
               <div className="text-center py-12 text-gray-400">
                 Solar baseline tables - read-only with lock icons
@@ -374,15 +441,22 @@ export function PractitionerMode() {
           </TabsContent>
 
           <TabsContent value="consumption">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-              <h2 className="text-xl font-bold text-[var(--ef-black)] mb-6">Consumption Module</h2>
-              <p className="text-gray-600 mb-6">
-                Fine-tune consumption parameters. Track-specific guidance below.
-              </p>
-              <div className="text-center py-12 text-gray-400">
-                Consumption fine-tune controls - sliders and selects
+            {isEditableLens ? (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                <h2 className="text-xl font-bold text-[var(--ef-black)] mb-6">Consumption Module</h2>
+                <p className="text-gray-600 mb-6">
+                  Fine-tune consumption parameters. Track-specific guidance below.
+                </p>
+                <div className="text-center py-12 text-gray-400">
+                  Consumption fine-tune controls - sliders and selects
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                <h2 className="text-xl font-bold text-[var(--ef-black)] mb-2">Consumption Module</h2>
+                <p className="text-sm text-gray-600">Switch to Practitioner to edit consumption inputs.</p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="outputs">

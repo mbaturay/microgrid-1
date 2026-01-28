@@ -315,17 +315,19 @@ export function OverviewTab({ project, onUpdateSiteTeam, onUpdateTrack }: Overvi
           <div className="space-y-3">
             {tracks.map((track) => {
               const isSelected = selectedTrack === track.id;
+              const isLocked = !onUpdateTrack;
               return (
                 <motion.button
                   key={track.id}
                   className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
                     isSelected
                       ? 'border-[var(--ef-jade)] bg-[var(--ef-jade)]/5'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
-                  }`}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
+                      : 'border-gray-200 bg-white'
+                  } ${isLocked ? 'opacity-80 cursor-not-allowed' : 'hover:border-gray-300'}`}
+                  whileHover={isLocked ? undefined : { scale: 1.01 }}
+                  whileTap={isLocked ? undefined : { scale: 0.99 }}
                   onClick={() => onUpdateTrack?.(track.id)}
+                  aria-disabled={isLocked}
                 >
                   <div className="flex items-start gap-3">
                     <div
