@@ -1,19 +1,100 @@
-import { Project, Track } from '@/app/data/mockData';
-import { Card } from '@/app/components/ui/card';
+import { useEffect, useState } from 'react';
+import { Project, Track, type SiteTeam } from '@/app/data/mockData';
+import { Input } from '@/app/components/ui/input';
+import { Label } from '@/app/components/ui/label';
+import { Button } from '@/app/components/ui/button';
 import { motion } from 'motion/react';
 import { DollarSign, TrendingUp, Clock, Zap, MapPin, Calendar } from 'lucide-react';
 import { LiveOutputsPanel } from '@/app/components/LiveOutputsPanel';
 
 interface OverviewTabProps {
   project: Project;
+  onUpdateSiteTeam?: (siteTeam: SiteTeam) => void;
 }
 
-export function OverviewTab({ project }: OverviewTabProps) {
+const emptySiteTeam: SiteTeam = {
+  avp: '',
+  agmm: '',
+  projectOrganizer: '',
+  projectManagers: [],
+  taxSupport: [],
+};
+
+export function OverviewTab({ project, onUpdateSiteTeam }: OverviewTabProps) {
+  const [isEditingSiteTeam, setIsEditingSiteTeam] = useState(false);
+  const [draftSiteTeam, setDraftSiteTeam] = useState<SiteTeam>(project.meta?.siteTeam ?? emptySiteTeam);
   const tracks: Array<{ id: Track; title: string; description: string }> = [
     { id: 1, title: 'Track 1: End-of-Life Decision', description: 'Evaluate replacement vs. upgrade options for aging equipment' },
     { id: 2, title: 'Track 2: Fully Off-Grid Facility', description: 'Design standalone microgrid for complete energy independence' },
     { id: 3, title: 'Track 3: Isolate Critical Loads', description: 'Protect essential operations during grid outages' },
   ];
+
+  const updateDraft = (partial: Partial<SiteTeam>) => {
+    setDraftSiteTeam((prev) => ({ ...prev, ...partial }));
+  };
+
+  const updateListItem = (key: keyof SiteTeam, index: number, value: string) => {
+    const list = [...(draftSiteTeam[key] as string[] | undefined ?? [])];
+    list[index] = value;
+    updateDraft({ [key]: list } as Partial<SiteTeam>);
+  };
+
+  const addListItem = (key: keyof SiteTeam) => {
+    const list = [...(draftSiteTeam[key] as string[] | undefined ?? [])];
+    list.push('');
+    updateDraft({ [key]: list } as Partial<SiteTeam>);
+  };
+
+  const removeListItem = (key: keyof SiteTeam, index: number) => {
+    const list = [...(draftSiteTeam[key] as string[] | undefined ?? [])];
+    list.splice(index, 1);
+    updateDraft({ [key]: list } as Partial<SiteTeam>);
+  };
+
+  const normalizeSiteTeam = (siteTeam: SiteTeam): SiteTeam => {
+    const normalizeSingle = (value?: string) => value?.trim() || '';
+    const normalizeList = (list?: string[]) => {
+      const unique = new Set(
+        (list ?? [])
+          .map((item) => item.trim())
+          .filter((item) => item.length > 0)
+      );
+      return Array.from(unique);
+    };
+
+    return {
+      avp: normalizeSingle(siteTeam.avp),
+      agmm: normalizeSingle(siteTeam.agmm),
+      projectOrganizer: normalizeSingle(siteTeam.projectOrganizer),
+      projectManagers: normalizeList(siteTeam.projectManagers),
+      taxSupport: normalizeList(siteTeam.taxSupport),
+    };
+  };
+
+  const handleSiteTeamSave = () => {
+    const normalized = normalizeSiteTeam(draftSiteTeam);
+    setDraftSiteTeam(normalized);
+    onUpdateSiteTeam?.(normalized);
+    setIsEditingSiteTeam(false);
+  };
+
+  const handleSiteTeamCancel = () => {
+    setDraftSiteTeam(project.meta?.siteTeam ?? emptySiteTeam);
+    setIsEditingSiteTeam(false);
+  };
+
+  useEffect(() => {
+    if (!isEditingSiteTeam) {
+      setDraftSiteTeam(project.meta?.siteTeam ?? emptySiteTeam);
+    }
+  }, [project, isEditingSiteTeam]);
+
+  const renderList = (items?: string[]) => {
+    if (!items || items.length === 0) {
+      return <span className="text-gray-400">—</span>;
+    }
+    return items.join(', ');
+  };
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -82,6 +163,140 @@ export function OverviewTab({ project }: OverviewTabProps) {
               </div>
             </div>
           </div>
+        </motion.div>
+
+        {/* Site Team Card */}
+        <motion.div
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-[var(--ef-black)]">Site Team</h2>
+              <p className="text-sm text-gray-600">Key contacts for this project.</p>
+            </div>
+            {!isEditingSiteTeam && (
+              <Button variant="outline" size="sm" onClick={() => setIsEditingSiteTeam(true)}>
+                Edit
+              </Button>
+            )}
+          </div>
+
+          {!isEditingSiteTeam && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-gray-500">AVP</p>
+                <p className="font-medium text-[var(--ef-black)]">{draftSiteTeam.avp || '—'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">AGMM</p>
+                <p className="font-medium text-[var(--ef-black)]">{draftSiteTeam.agmm || '—'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Project Organizer</p>
+                <p className="font-medium text-[var(--ef-black)]">{draftSiteTeam.projectOrganizer || '—'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Project Managers</p>
+                <p className="font-medium text-[var(--ef-black)]">{renderList(draftSiteTeam.projectManagers)}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Tax Support</p>
+                <p className="font-medium text-[var(--ef-black)]">{renderList(draftSiteTeam.taxSupport)}</p>
+              </div>
+            </div>
+          )}
+
+          {isEditingSiteTeam && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="site-team-avp" className="text-sm text-gray-600">AVP</Label>
+                  <Input
+                    id="site-team-avp"
+                    value={draftSiteTeam.avp ?? ''}
+                    onChange={(event) => updateDraft({ avp: event.target.value })}
+                    placeholder="Enter name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="site-team-agmm" className="text-sm text-gray-600">AGMM</Label>
+                  <Input
+                    id="site-team-agmm"
+                    value={draftSiteTeam.agmm ?? ''}
+                    onChange={(event) => updateDraft({ agmm: event.target.value })}
+                    placeholder="Enter name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="site-team-organizer" className="text-sm text-gray-600">Project Organizer</Label>
+                  <Input
+                    id="site-team-organizer"
+                    value={draftSiteTeam.projectOrganizer ?? ''}
+                    onChange={(event) => updateDraft({ projectOrganizer: event.target.value })}
+                    placeholder="Enter name"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm text-gray-600">Project Managers</Label>
+                  <Button variant="ghost" size="sm" onClick={() => addListItem('projectManagers')}>
+                    Add
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {(draftSiteTeam.projectManagers ?? []).map((manager, index) => (
+                    <div key={`pm-${index}`} className="flex items-center gap-2">
+                      <Input
+                        value={manager}
+                        onChange={(event) => updateListItem('projectManagers', index, event.target.value)}
+                        placeholder="Enter name"
+                      />
+                      <Button variant="ghost" size="sm" onClick={() => removeListItem('projectManagers', index)}>
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm text-gray-600">Tax Support</Label>
+                  <Button variant="ghost" size="sm" onClick={() => addListItem('taxSupport')}>
+                    Add
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {(draftSiteTeam.taxSupport ?? []).map((member, index) => (
+                    <div key={`tax-${index}`} className="flex items-center gap-2">
+                      <Input
+                        value={member}
+                        onChange={(event) => updateListItem('taxSupport', index, event.target.value)}
+                        placeholder="Enter name"
+                      />
+                      <Button variant="ghost" size="sm" onClick={() => removeListItem('taxSupport', index)}>
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2">
+                <Button variant="outline" size="sm" onClick={handleSiteTeamCancel}>
+                  Cancel
+                </Button>
+                <Button size="sm" className="bg-[var(--ef-jade)] hover:bg-[var(--ef-jade)]/90 text-white" onClick={handleSiteTeamSave}>
+                  Save
+                </Button>
+              </div>
+            </div>
+          )}
         </motion.div>
 
         {/* Track Selector Card */}

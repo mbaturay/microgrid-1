@@ -4,6 +4,18 @@ export type ProjectStage = 'Proposed' | 'Analysis' | 'Green Ink' | 'Construction
 export type Track = 1 | 2 | 3;
 export type ConfidenceBadge = 'computed' | 'partial' | 'stubbed';
 
+export interface SiteTeam {
+  avp?: string;
+  agmm?: string;
+  projectOrganizer?: string;
+  projectManagers?: string[];
+  taxSupport?: string[];
+}
+
+export interface ProjectMeta {
+  siteTeam?: SiteTeam;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -21,6 +33,7 @@ export interface Project {
   totalTaxBenefit: number;
   track?: Track;
   lastSaved?: string;
+  meta?: ProjectMeta;
 }
 
 export const mockProjects: Project[] = [
@@ -40,7 +53,16 @@ export const mockProjects: Project[] = [
     annualSavings: 592000,
     totalTaxBenefit: 960000,
     track: 1,
-    lastSaved: '2026-01-26 14:32'
+    lastSaved: '2026-01-26 14:32',
+    meta: {
+      siteTeam: {
+        avp: 'Alex Morgan',
+        agmm: 'Jada Patel',
+        projectOrganizer: 'Sofia Rivera',
+        projectManagers: ['Jordan Lee', 'Priya Shah'],
+        taxSupport: ['Evan Brooks'],
+      },
+    }
   },
   {
     id: '2',
@@ -58,7 +80,16 @@ export const mockProjects: Project[] = [
     annualSavings: 467000,
     totalTaxBenefit: 630000,
     track: 2,
-    lastSaved: '2026-01-25 09:15'
+    lastSaved: '2026-01-25 09:15',
+    meta: {
+      siteTeam: {
+        avp: 'Renee Alvarez',
+        agmm: 'Cameron Diaz',
+        projectOrganizer: 'Mia Chen',
+        projectManagers: ['Noah Kim'],
+        taxSupport: ['Luca Rossi', 'Taylor Reed'],
+      },
+    }
   },
   {
     id: '3',
@@ -76,7 +107,16 @@ export const mockProjects: Project[] = [
     annualSavings: 684000,
     totalTaxBenefit: 1350000,
     track: 3,
-    lastSaved: '2026-01-27 11:22'
+    lastSaved: '2026-01-27 11:22',
+    meta: {
+      siteTeam: {
+        avp: 'Avery Blake',
+        agmm: 'Luis Martin',
+        projectOrganizer: 'Nina Park',
+        projectManagers: ['Samir Khan'],
+        taxSupport: ['Morgan Price'],
+      },
+    }
   },
   {
     id: '4',
