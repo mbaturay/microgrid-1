@@ -85,17 +85,17 @@ export function LiveOutputsPanel({
 
   return (
     <motion.div
-      className="sticky top-24 bg-white rounded-xl shadow-lg border-2 border-[var(--ef-jade)]/20 p-6 relative"
+      className="sticky top-24 bg-white rounded-xl shadow-lg border-2 border-[#03454D]/20 p-6 relative"
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.2 }}
     >
       {isRecalculating && (
-        <div className="absolute inset-x-0 top-0 h-1 rounded-t-xl bg-[var(--ef-jade)]/30 animate-pulse" />
+        <div className="absolute inset-x-0 top-0 h-1 rounded-t-xl bg-[#0B8562]/30 animate-pulse" />
       )}
       <div className="flex items-center justify-between mb-6">
         <h3 className="font-semibold text-lg text-[var(--ef-black)]">Live Outputs</h3>
-        <div className={`w-2 h-2 rounded-full bg-[var(--ef-jade)] ${isRecalculating ? 'animate-pulse' : ''}`} />
+        <div className={`w-2 h-2 rounded-full bg-[#0B8562] ${isRecalculating ? 'animate-pulse' : ''}`} />
       </div>
 
       <div className="space-y-6">
@@ -116,10 +116,10 @@ export function LiveOutputsPanel({
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-[var(--ef-jade)]/10 flex items-center justify-center">
-                        <Icon className="w-4 h-4 text-[var(--ef-jade)]" />
+                      <div className="w-8 h-8 rounded-lg bg-[#03454D]/10 flex items-center justify-center">
+                        <Icon className="w-4 h-4 text-[#03454D]" />
                       </div>
-                      <span className="text-sm font-medium text-gray-600">{output.label}</span>
+                      <span className="text-sm font-medium text-[#1F2123]/80">{output.label}</span>
                     </div>
                     <ConfidenceBadge confidence={output.confidence} size="sm" />
                   </div>
@@ -142,7 +142,7 @@ export function LiveOutputsPanel({
 
       <div className="mt-6 pt-6 border-t border-gray-200">
         <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
-          <div className={`w-2 h-2 rounded-full bg-[var(--ef-jade)] ${isRecalculating ? 'animate-pulse' : ''}`} />
+          <div className={`w-2 h-2 rounded-full bg-[#0B8562] ${isRecalculating ? 'animate-pulse' : ''}`} />
           <span>{isRecalculating ? 'Recalculating…' : 'Auto-updating on changes'}</span>
         </div>
         <p className="text-xs text-gray-500">

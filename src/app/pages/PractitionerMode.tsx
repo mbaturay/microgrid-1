@@ -265,7 +265,7 @@ export function PractitionerMode() {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/')}
-                className="text-[var(--ef-teal)]"
+                    className="text-[#03454D]"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Portfolio
@@ -299,7 +299,7 @@ export function PractitionerMode() {
                   </Button>
                   <Button
                     size="sm"
-                    className="bg-[var(--ef-jade)] hover:bg-[var(--ef-jade)]/90 text-white"
+                    className="bg-[#03454D] hover:bg-[#03454D]/90 text-white"
                   >
                     <Save className="w-4 h-4 mr-2" />
                     Save
@@ -325,9 +325,9 @@ export function PractitionerMode() {
       <div className="max-w-[1920px] mx-auto px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="bg-white border border-gray-200 p-1 mb-6 w-full grid grid-cols-8 gap-1">
-            <TabsTrigger 
+            <TabsTrigger
               value="overview"
-              className="data-[state=active]:bg-[var(--ef-jade)] data-[state=active]:text-white data-[state=active]:shadow-md"
+              className="data-[state=active]:bg-[#03454D] data-[state=active]:text-white data-[state=active]:shadow-md"
             >
               Overview
             </TabsTrigger>
@@ -335,7 +335,7 @@ export function PractitionerMode() {
               value="budget"
               disabled={!isEditableLens}
               aria-disabled={!isEditableLens}
-              className="data-[state=active]:bg-[var(--ef-jade)] data-[state=active]:text-white data-[state=active]:shadow-md"
+              className="data-[state=active]:bg-[#03454D] data-[state=active]:text-white data-[state=active]:shadow-md"
             >
               <span className="flex items-center gap-2">
                 Budget
@@ -346,7 +346,7 @@ export function PractitionerMode() {
               value="model-variables"
               disabled={!isEditableLens}
               aria-disabled={!isEditableLens}
-              className="data-[state=active]:bg-[var(--ef-jade)] data-[state=active]:text-white data-[state=active]:shadow-md"
+              className="data-[state=active]:bg-[#03454D] data-[state=active]:text-white data-[state=active]:shadow-md"
             >
               <span className="flex items-center gap-2">
                 Model Variables
@@ -357,7 +357,7 @@ export function PractitionerMode() {
               value="interval-data"
               disabled={!isEditableLens}
               aria-disabled={!isEditableLens}
-              className="data-[state=active]:bg-[var(--ef-jade)] data-[state=active]:text-white data-[state=active]:shadow-md"
+              className="data-[state=active]:bg-[#03454D] data-[state=active]:text-white data-[state=active]:shadow-md"
             >
               <span className="flex items-center gap-2">
                 Interval Data
@@ -367,8 +367,7 @@ export function PractitionerMode() {
             <TabsTrigger 
               value="utility-baseline"
               disabled={!isEditableLens}
-              aria-disabled={!isEditableLens}
-              className="data-[state=active]:bg-[var(--ef-jade)] data-[state=active]:text-white data-[state=active]:shadow-md"
+              className="data-[state=active]:bg-[#03454D] data-[state=active]:text-white data-[state=active]:shadow-md"
             >
               <span className="flex items-center gap-2">
                 Utility Baseline
@@ -378,8 +377,7 @@ export function PractitionerMode() {
             <TabsTrigger 
               value="solar-baseline"
               disabled={!isEditableLens}
-              aria-disabled={!isEditableLens}
-              className="data-[state=active]:bg-[var(--ef-jade)] data-[state=active]:text-white data-[state=active]:shadow-md"
+              className="data-[state=active]:bg-[#03454D] data-[state=active]:text-white data-[state=active]:shadow-md"
             >
               <span className="flex items-center gap-2">
                 Solar Baseline
@@ -390,7 +388,7 @@ export function PractitionerMode() {
               value="consumption"
               disabled={!isEditableLens}
               aria-disabled={!isEditableLens}
-              className="data-[state=active]:bg-[var(--ef-jade)] data-[state=active]:text-white data-[state=active]:shadow-md"
+              className="data-[state=active]:bg-[#03454D] data-[state=active]:text-white data-[state=active]:shadow-md"
             >
               <span className="flex items-center gap-2">
                 Consumption
@@ -399,7 +397,7 @@ export function PractitionerMode() {
             </TabsTrigger>
             <TabsTrigger 
               value="outputs"
-              className="data-[state=active]:bg-[var(--ef-jade)] data-[state=active]:text-white data-[state=active]:shadow-md"
+              className="data-[state=active]:bg-[#03454D] data-[state=active]:text-white data-[state=active]:shadow-md"
             >
               Outputs
             </TabsTrigger>

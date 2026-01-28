@@ -230,7 +230,7 @@ export default function PortfolioMap({
       </div>
       <button
         type="button"
-        className="absolute right-3 top-3 z-[500] inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white/90 text-gray-600 shadow-sm transition hover:text-[var(--ef-jade)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ef-jade)]"
+        className="absolute right-3 top-3 z-[500] inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white/90 text-gray-600 shadow-sm transition hover:text-[#03454D] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#03454D]"
         onClick={() => fitAllProjects()}
         aria-label="Reset view"
       >

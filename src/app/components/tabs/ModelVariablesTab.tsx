@@ -403,7 +403,7 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
           <select
             value={variable.value as string}
             onChange={(e) => handleVariableChange(variable.id, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ef-jade)]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#03454D]"
           >
             {variable.options?.map(opt => (
               <option key={opt} value={opt}>{opt}</option>
@@ -488,7 +488,7 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
             </div>
           </div>
           {importMessage && (
-            <div className="mb-4 rounded-md border border-[var(--ef-jade)]/30 bg-[var(--ef-jade)]/5 px-3 py-2 text-xs text-[var(--ef-teal)]">
+            <div className="mb-4 rounded-md border border-[#03454D]/20 bg-[#F4F7F7] px-3 py-2 text-xs text-[#1F2123]">
               {importMessage}
             </div>
           )}
@@ -496,7 +496,7 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
           {/* Search and Filters */}
           <div className="flex flex-col md:flex-row gap-4 mb-6 pb-6 border-b">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#03454D]" />
               <Input
                 type="text"
                 placeholder="Search variables..."
@@ -526,8 +526,8 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
                     type="button"
                     className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
                       isActive
-                        ? 'border-[var(--ef-jade)] bg-[var(--ef-jade)]/10 text-[var(--ef-jade)]'
-                        : 'border-gray-200 text-gray-600 hover:border-[var(--ef-jade)]/60'
+                        ? 'border-[#03454D] bg-[#03454D]/10 text-[#03454D]'
+                        : 'border-gray-200 text-gray-600 hover:border-[#03454D]/60'
                     }`}
                     aria-current={isActive ? 'true' : undefined}
                     onClick={() => {
@@ -537,7 +537,7 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
                     }}
                   >
                     {section}
-                    {count > 0 && <span className="ml-2 rounded-full bg-[var(--ef-jade)]/20 px-2 py-0.5 text-[10px]">{count}</span>}
+                    {count > 0 && <span className="ml-2 rounded-full bg-[#03454D]/15 px-2 py-0.5 text-[10px] text-[#03454D]">{count}</span>}
                   </button>
                 );
               })}
@@ -566,7 +566,7 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
                     value={section}
                     className={`border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm transition ${
                       isSectionHighlighted
-                        ? 'ring-2 ring-[var(--ef-jade)]/20 bg-[var(--ef-jade)]/5'
+                        ? 'ring-2 ring-[#03454D]/20 bg-[#03454D]/5'
                         : ''
                     } ${prefersReducedMotion ? '' : 'duration-200'}`}
                   >
@@ -576,16 +576,16 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
                           <div className="flex items-center gap-2">
                             <span className="font-semibold text-[var(--ef-black)]">{section}</span>
                             {changeCount > 0 && (
-                              <span className="rounded-full bg-[var(--ef-jade)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--ef-jade)]">
+                              <span className="rounded-full bg-[#03454D]/10 px-2 py-0.5 text-[10px] font-medium text-[#03454D]">
                                 {changeCount} changes
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-500 mt-1">{sectionHelper}</p>
+                          <p className="text-xs text-[#1F2123]/70 mt-1">{sectionHelper}</p>
                         </div>
                         <button
                           type="button"
-                          className="text-xs font-medium text-gray-500 hover:text-[var(--ef-jade)]"
+                          className="text-xs font-medium text-gray-500 hover:text-[#03454D]"
                           onClick={(event) => {
                             event.stopPropagation();
                             resetSection(section);
@@ -601,19 +601,19 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
                           <div
                             key={variable.id}
                             className={`group grid grid-cols-1 md:grid-cols-2 gap-3 items-start rounded-lg border border-transparent px-2 py-2 transition ${
-                              highlightedIds.includes(variable.id) ? 'border-[var(--ef-jade)]/50 bg-[var(--ef-jade)]/5' : ''
+                              highlightedIds.includes(variable.id) ? 'border-[#03454D]/50 bg-[#03454D]/5' : ''
                             }`}
                           >
-                            <Label htmlFor={variable.id} className="text-sm font-medium text-gray-700 pt-2 flex items-center gap-2">
+                            <Label htmlFor={variable.id} className="text-sm font-medium text-[#1F2123] pt-2 flex items-center gap-2">
                               <span>{variable.label}</span>
-                              {isChanged(variable) && <span className="h-2 w-2 rounded-full bg-[var(--ef-jade)]" />}
+                              {isChanged(variable) && <span className="h-2 w-2 rounded-full bg-[#0B8562]" />}
                             </Label>
                             <div className="space-y-1">
                               <div className="relative">
                                 {renderInput(variable)}
                                 <button
                                   type="button"
-                                  className="absolute right-0 top-0 -translate-y-8 opacity-0 transition group-hover:opacity-100 text-xs text-gray-500 hover:text-[var(--ef-jade)]"
+                                  className="absolute right-0 top-0 -translate-y-8 opacity-0 transition group-hover:opacity-100 text-xs text-gray-500 hover:text-[#03454D]"
                                   onClick={() => resetVariable(variable.id)}
                                 >
                                   Reset to default

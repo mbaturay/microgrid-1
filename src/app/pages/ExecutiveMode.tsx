@@ -221,7 +221,7 @@ export function ExecutiveMode() {
                       }
                     }}
                     aria-pressed={isActive}
-                    className={`px-3 sm:px-4 py-3 rounded-lg transition-all duration-150 flex-1 sm:flex-initial min-w-[120px] border cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ef-jade)] ${hoverLift} ${
+                    className={`px-3 sm:px-4 py-3 rounded-lg transition-all duration-150 flex-1 sm:flex-initial min-w-[120px] border cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#03454D] ${hoverLift} ${
                       isActive
                         ? `${theme.tileClass} ring-2 ${theme.ringClass}`
                         : 'border-gray-200 bg-white hover:shadow-sm'
@@ -246,7 +246,7 @@ export function ExecutiveMode() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#03454D]" />
               <Input
                 type="text"
                 placeholder="Search projects or locations..."
@@ -268,7 +268,7 @@ export function ExecutiveMode() {
             <select
               value={selectedRegion}
               onChange={(e) => setSelectedRegion(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ef-jade)]"
+              className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#03454D]"
             >
               {regions.map((region) => (
                 <option key={region} value={region}>

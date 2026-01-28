@@ -150,8 +150,8 @@ export function OverviewTab({
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-lg bg-[var(--ef-jade)]/10 flex items-center justify-center flex-shrink-0">
-                <Zap className="w-5 h-5 text-[var(--ef-jade)]" />
+              <div className="w-10 h-10 rounded-lg bg-[#03454D]/10 flex items-center justify-center flex-shrink-0">
+                <Zap className="w-5 h-5 text-[#03454D]" />
               </div>
               <div>
                 <p className="text-sm text-gray-600 mb-1">Capacity</p>
@@ -323,7 +323,7 @@ export function OverviewTab({
                 <Button variant="outline" size="sm" onClick={handleSiteTeamCancel}>
                   Cancel
                 </Button>
-                <Button size="sm" className="bg-[var(--ef-jade)] hover:bg-[var(--ef-jade)]/90 text-white" onClick={handleSiteTeamSave}>
+                <Button size="sm" className="bg-[#03454D] hover:bg-[#03454D]/90 text-white" onClick={handleSiteTeamSave}>
                   Save
                 </Button>
               </div>
@@ -360,7 +360,7 @@ export function OverviewTab({
                   key={track.id}
                   className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
                     isSelected
-                      ? 'border-[var(--ef-jade)] bg-[var(--ef-jade)]/5'
+                      ? 'border-[#03454D] bg-[#03454D]/5'
                       : 'border-gray-200 bg-white'
                   } ${isLocked ? 'opacity-80' : 'hover:border-gray-300 cursor-pointer'}`}
                   whileHover={isLocked ? undefined : { scale: 1.01 }}
@@ -377,7 +377,7 @@ export function OverviewTab({
                   <div className="flex items-start gap-3">
                     <div
                       className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                        isSelected ? 'border-[var(--ef-jade)] bg-[var(--ef-jade)]' : 'border-gray-300'
+                        isSelected ? 'border-[#03454D] bg-[#03454D]' : 'border-gray-300'
                       }`}
                     >
                       {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
@@ -438,7 +438,7 @@ export function OverviewTab({
 
         {/* Next Steps Card */}
         <motion.div
-          className="bg-gradient-to-br from-[var(--ef-jade)]/10 to-[var(--ef-teal)]/10 rounded-xl border border-[var(--ef-jade)]/20 p-8"
+          className="bg-gradient-to-br from-[#03454D]/10 to-[var(--ef-teal)]/10 rounded-xl border border-[#03454D]/20 p-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -469,19 +469,19 @@ export function OverviewTab({
             ) : (
               <>
                 <li className="flex items-start gap-2">
-                  <span className="text-[var(--ef-jade)] mt-1">✓</span>
+                  <span className="text-[#03454D] mt-1">✓</span>
                   <span className="text-gray-700">Review and update Model Variables for accurate calculations</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-[var(--ef-jade)] mt-1">✓</span>
+                  <span className="text-[#03454D] mt-1">✓</span>
                   <span className="text-gray-700">Upload interval data CSV with timestamp and kW/kWh columns</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-[var(--ef-jade)] mt-1">✓</span>
+                  <span className="text-[#03454D] mt-1">✓</span>
                   <span className="text-gray-700">Fine-tune consumption module based on track requirements</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-[var(--ef-jade)] mt-1">✓</span>
+                  <span className="text-[#03454D] mt-1">✓</span>
                   <span className="text-gray-700">Export results when calculations are complete</span>
                 </li>
               </>

@@ -55,22 +55,22 @@ export function IntervalDataTab({ project }: IntervalDataTabProps) {
           </div>
 
           {!fileUploaded ? (
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-[var(--ef-jade)] transition-colors">
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-lg font-medium text-gray-700 mb-2">Drop CSV file here or click to browse</p>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-[#03454D] transition-colors">
+              <Upload className="w-12 h-12 text-[#03454D] mx-auto mb-4" />
+              <p className="text-lg font-medium text-[#1F2123] mb-2">Drop CSV file here or click to browse</p>
               <p className="text-sm text-gray-500 mb-4">Maximum file size: 50MB</p>
               <Button
                 onClick={() => setFileUploaded(true)}
-                className="bg-[var(--ef-jade)] hover:bg-[var(--ef-jade)]/90"
+                className="bg-[#03454D] hover:bg-[#03454D]/90 text-white"
               >
                 Select File
               </Button>
             </div>
           ) : (
-            <div className="border border-[var(--ef-jade)] rounded-lg p-4 bg-[var(--ef-jade)]/5">
+            <div className="border border-[#03454D]/25 rounded-lg p-4 bg-[#F4F7F7]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <FileText className="w-8 h-8 text-[var(--ef-jade)]" />
+                  <FileText className="w-8 h-8 text-[#03454D]" />
                   <div>
                     <p className="font-semibold text-[var(--ef-black)]">interval_data_2025.csv</p>
                     <p className="text-sm text-gray-600">8,760 rows • 2.4 MB • Uploaded 2 mins ago</p>

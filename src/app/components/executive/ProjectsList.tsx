@@ -115,12 +115,12 @@ export function ProjectsList({
             ref={(node) => {
               itemRefs.current[project.id] = node;
             }}
-            className={`p-3 sm:p-4 rounded-lg border cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ef-jade)] ${
+            className={`p-3 sm:p-4 rounded-lg border cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#03454D] ${
               isSelected
-                ? 'border-[var(--ef-jade)] shadow-md'
+                ? 'border-[#03454D] shadow-md'
                 : isHighlight
                   ? `border-gray-200 ring-2 ring-yellow-300/40 shadow-sm ${liftClass} transition-[transform,box-shadow] duration-150 ease-out`
-                  : 'border-gray-200 hover:border-[var(--ef-jade)]'
+                  : 'border-gray-200 hover:border-[#03454D]'
             }`}
             initial={{ opacity: 0, y: 16 }}
             animate={{
@@ -169,7 +169,7 @@ export function ProjectsList({
               <div className="flex-1 min-w-0">
                 <h4
                   id={nameId}
-                  className="font-semibold text-[var(--ef-black)] group-hover:text-[var(--ef-jade)] transition-colors truncate"
+                  className="font-semibold text-[var(--ef-black)] group-hover:text-[#03454D] transition-colors truncate"
                 >
                   {project.name}
                 </h4>
@@ -180,7 +180,7 @@ export function ProjectsList({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-3 pt-3 border-t border-gray-100">
               <div>
                 <p className="text-xs text-gray-500">ROI</p>
-                <p id={roiId} className="text-sm font-semibold text-[var(--ef-jade)]">
+                <p id={roiId} className="text-sm font-semibold text-[#03454D]">
                   {project.roi}%
                 </p>
               </div>

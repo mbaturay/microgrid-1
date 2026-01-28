@@ -48,7 +48,7 @@ export function KPICard({ title, value, subtitle, icon: Icon, trend, trendValue,
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm text-gray-600 mb-1">{title}</p>
+          <p className="text-sm text-[#1F2123]/80 mb-1">{title}</p>
           <p className="text-3xl font-bold text-[var(--ef-black)] mb-2">
             {typeof displayValue === 'number' && animated
               ? displayValue.toLocaleString()
@@ -57,8 +57,8 @@ export function KPICard({ title, value, subtitle, icon: Icon, trend, trendValue,
           {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
         </div>
         {Icon && (
-          <div className="w-10 h-10 rounded-lg bg-[var(--ef-jade)]/10 flex items-center justify-center">
-            <Icon className="w-5 h-5 text-[var(--ef-jade)]" />
+          <div className="w-10 h-10 rounded-lg bg-[#03454D]/10 flex items-center justify-center">
+            <Icon className="w-5 h-5 text-[#03454D]" />
           </div>
         )}
       </div>
