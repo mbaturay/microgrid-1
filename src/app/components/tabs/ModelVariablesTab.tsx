@@ -412,51 +412,48 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
         );
       case 'percent':
         return (
-          <div className="relative">
+          <div className="flex items-center gap-2">
             <Input
               type="number"
               value={typeof variable.value === 'boolean' ? '' : variable.value}
               onChange={(e) => handleVariableChange(variable.id, parseFloat(e.target.value))}
-              className="pr-8"
+              className="flex-1"
               step="0.1"
               min={min}
               max={max}
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">%</span>
+            <span className="text-sm text-gray-500">%</span>
           </div>
         );
       case 'currency':
         return (
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">$</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">$</span>
             <Input
               type="number"
               value={typeof variable.value === 'boolean' ? '' : variable.value}
               onChange={(e) => handleVariableChange(variable.id, parseFloat(e.target.value))}
-              className="pl-7"
+              className="flex-1"
               step="0.01"
               min={min}
               max={max}
             />
-            {variable.unit && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">{variable.unit}</span>
-            )}
+            {variable.unit && <span className="text-sm text-gray-500">{variable.unit}</span>}
           </div>
         );
       default:
         return (
-          <div className="relative">
+          <div className="flex items-center gap-2">
             <Input
               type={variable.type}
               value={typeof variable.value === 'boolean' ? '' : (variable.value as string | number)}
               onChange={(e) => handleVariableChange(variable.id, variable.type === 'number' ? parseFloat(e.target.value) : e.target.value)}
+              className="flex-1"
               step="0.01"
               min={min}
               max={max}
             />
-            {variable.unit && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">{variable.unit}</span>
-            )}
+            {variable.unit && <span className="text-sm text-gray-500">{variable.unit}</span>}
           </div>
         );
     }
@@ -609,11 +606,11 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
                               {isChanged(variable) && <span className="h-2 w-2 rounded-full bg-[#0B8562]" />}
                             </Label>
                             <div className="space-y-1">
-                              <div className="relative">
+                              <div className="space-y-1">
                                 {renderInput(variable)}
                                 <button
                                   type="button"
-                                  className="absolute right-0 top-0 -translate-y-8 opacity-0 transition group-hover:opacity-100 text-xs text-gray-500 hover:text-[#03454D]"
+                                  className="text-xs text-gray-500 hover:text-[#03454D] opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100 pl-1 text-left"
                                   onClick={() => resetVariable(variable.id)}
                                 >
                                   Reset to default
