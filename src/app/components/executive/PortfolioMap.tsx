@@ -96,8 +96,8 @@ export default function PortfolioMap({
       </button>
       <MapContainer
         className="h-full w-full"
-        scrollWheelZoom={false}
-        zoomControl={true}
+        scrollWheelZoom={true}
+        zoomControl={false}
         center={[39.5, -98.35]}
         zoom={4}
         ref={mapRef}
