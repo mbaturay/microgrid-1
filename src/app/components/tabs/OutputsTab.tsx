@@ -3,12 +3,15 @@ import { Button } from '@/app/components/ui/button';
 import { Download, FileDown, FileText, AlertTriangle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ConfidenceBadge } from '@/app/components/ConfidenceBadge';
+import { useProjectLens } from '@/app/lib/ProjectLensContext';
 
 interface OutputsTabProps {
   project: Project;
 }
 
 export function OutputsTab({ project }: OutputsTabProps) {
+  const { lens } = useProjectLens();
+  const isExecutiveLens = lens === 'executive';
   const keyMetrics = [
     { label: 'Net Present Value (NPV)', value: `$${(project.npv / 1000000).toFixed(2)}M`, confidence: 'computed' as const },
     { label: 'Return on Investment (ROI)', value: `${project.roi}%`, confidence: 'computed' as const },
@@ -32,7 +35,11 @@ export function OutputsTab({ project }: OutputsTabProps) {
     <div className="space-y-6">
       {/* Investment Summary */}
       <motion.div
-        className="bg-gradient-to-br from-[var(--ef-jade)]/10 via-white to-[var(--ef-teal)]/10 rounded-xl border-2 border-[var(--ef-jade)]/20 shadow-lg p-8"
+        className={`rounded-xl p-8 ${
+          isExecutiveLens
+            ? 'bg-[var(--ef-light-2)] border border-transparent shadow-none'
+            : 'bg-gradient-to-br from-[var(--ef-jade)]/10 via-white to-[var(--ef-teal)]/10 border-2 border-[var(--ef-jade)]/20 shadow-lg'
+        }`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -41,13 +48,17 @@ export function OutputsTab({ project }: OutputsTabProps) {
           {keyMetrics.map((metric, idx) => (
             <motion.div
               key={metric.label}
-              className="bg-white rounded-lg p-4 border border-gray-200"
+              className={`rounded-lg p-4 ${
+                isExecutiveLens
+                  ? 'bg-white/70 border border-transparent'
+                  : 'bg-white border border-gray-200'
+              }`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
             >
               <div className="flex items-start justify-between mb-2">
-                <p className="text-sm text-gray-600">{metric.label}</p>
+                <p className={`text-base ${isExecutiveLens ? 'text-[var(--ef-teal)]' : 'text-gray-700'}`}>{metric.label}</p>
                 <ConfidenceBadge confidence={metric.confidence} size="sm" />
               </div>
               <p className="text-2xl font-bold text-[var(--ef-black)]">{metric.value}</p>
@@ -58,13 +69,17 @@ export function OutputsTab({ project }: OutputsTabProps) {
 
       {/* Savings Narrative */}
       <motion.div
-        className="bg-white rounded-xl shadow-sm border border-gray-200 p-8"
+        className={`rounded-xl p-8 ${
+          isExecutiveLens
+            ? 'bg-white border border-transparent shadow-none'
+            : 'bg-white border border-gray-200 shadow-sm'
+        }`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
         <h3 className="text-xl font-bold text-[var(--ef-black)] mb-4">Financial Analysis</h3>
-        <div className="prose max-w-none text-gray-700 space-y-3">
+        <div className="prose max-w-none text-base text-[var(--ef-teal)]/90 space-y-3">
           <p>
             The <strong>{project.name}</strong> solar installation in {project.location} represents a financially sound investment 
             with an expected <strong>ROI of {project.roi}%</strong> and a payback period of <strong>{project.payback} years</strong>.
@@ -84,7 +99,11 @@ export function OutputsTab({ project }: OutputsTabProps) {
 
       {/* Key Assumptions */}
       <motion.div
-        className="bg-white rounded-xl shadow-sm border border-gray-200 p-8"
+        className={`rounded-xl p-8 ${
+          isExecutiveLens
+            ? 'bg-[var(--ef-light-2)] border border-transparent shadow-none'
+            : 'bg-white border border-gray-200 shadow-sm'
+        }`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -93,37 +112,37 @@ export function OutputsTab({ project }: OutputsTabProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <div className="flex justify-between py-2 border-b border-gray-100">
-              <span className="text-gray-600">Project Lifetime</span>
+              <span className="text-base text-[var(--ef-teal)]/80">Project Lifetime</span>
               <span className="font-semibold text-gray-900">25 years</span>
             </div>
             <div className="flex justify-between py-2 border-b border-gray-100">
-              <span className="text-gray-600">Discount Rate</span>
+              <span className="text-base text-[var(--ef-teal)]/80">Discount Rate</span>
               <span className="font-semibold text-gray-900">5.5%</span>
             </div>
             <div className="flex justify-between py-2 border-b border-gray-100">
-              <span className="text-gray-600">Annual Degradation</span>
+              <span className="text-base text-[var(--ef-teal)]/80">Annual Degradation</span>
               <span className="font-semibold text-gray-900">0.5%</span>
             </div>
             <div className="flex justify-between py-2 border-b border-gray-100">
-              <span className="text-gray-600">Federal ITC</span>
+              <span className="text-base text-[var(--ef-teal)]/80">Federal ITC</span>
               <span className="font-semibold text-gray-900">30%</span>
             </div>
           </div>
           <div className="space-y-2">
             <div className="flex justify-between py-2 border-b border-gray-100">
-              <span className="text-gray-600">Utility Escalation</span>
+              <span className="text-base text-[var(--ef-teal)]/80">Utility Escalation</span>
               <span className="font-semibold text-gray-900">3.2% / year</span>
             </div>
             <div className="flex justify-between py-2 border-b border-gray-100">
-              <span className="text-gray-600">Average Utility Rate</span>
+              <span className="text-base text-[var(--ef-teal)]/80">Average Utility Rate</span>
               <span className="font-semibold text-gray-900">$0.145 / kWh</span>
             </div>
             <div className="flex justify-between py-2 border-b border-gray-100">
-              <span className="text-gray-600">System Efficiency</span>
+              <span className="text-base text-[var(--ef-teal)]/80">System Efficiency</span>
               <span className="font-semibold text-gray-900">22%</span>
             </div>
             <div className="flex justify-between py-2 border-b border-gray-100">
-              <span className="text-gray-600">Track</span>
+              <span className="text-base text-[var(--ef-teal)]/80">Track</span>
               <span className="font-semibold text-gray-900">Track {project.track || 1}</span>
             </div>
           </div>
@@ -132,7 +151,11 @@ export function OutputsTab({ project }: OutputsTabProps) {
 
       {/* Export Options */}
       <motion.div
-        className="bg-white rounded-xl shadow-sm border border-gray-200 p-8"
+        className={`rounded-xl p-8 ${
+          isExecutiveLens
+            ? 'bg-white border border-transparent shadow-none'
+            : 'bg-white border border-gray-200 shadow-sm'
+        }`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
@@ -146,9 +169,9 @@ export function OutputsTab({ project }: OutputsTabProps) {
                 key={option.id}
                 className={`p-4 rounded-lg border ${
                   option.available
-                    ? 'border-gray-200 hover:border-[var(--ef-jade)] hover:shadow-md'
-                    : 'border-gray-100 bg-gray-50'
-                } transition-all`}
+                    ? 'border-gray-200 hover:border-[var(--ef-jade)]/40'
+                    : 'border-gray-100 bg-[var(--ef-light-1)]'
+                } ${isExecutiveLens ? 'shadow-none' : 'hover:shadow-md'} transition-all`}
               >
                 <div className="flex items-start gap-3">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
@@ -158,7 +181,7 @@ export function OutputsTab({ project }: OutputsTabProps) {
                   </div>
                   <div className="flex-1">
                     <h4 className="font-semibold text-gray-900 mb-1">{option.label}</h4>
-                    <p className="text-sm text-gray-600 mb-3">{option.description}</p>
+                    <p className="text-base text-[var(--ef-teal)]/80 mb-3">{option.description}</p>
                     <Button
                       size="sm"
                       variant={option.available ? 'default' : 'outline'}
