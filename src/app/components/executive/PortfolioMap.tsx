@@ -50,6 +50,43 @@ export default function PortfolioMap({
   const hoverTimeoutRef = useRef<number | null>(null);
   const latestHoverRef = useRef<string | null>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const displayPositions = useMemo(() => {
+    if (!projects.length) {
+      return new Map<string, { latitude: number; longitude: number }>();
+    }
+
+    const groups = new Map<string, Project[]>();
+    projects.forEach((project) => {
+      const key = `${project.latitude.toFixed(5)},${project.longitude.toFixed(5)}`;
+      const existing = groups.get(key);
+      if (existing) {
+        existing.push(project);
+      } else {
+        groups.set(key, [project]);
+      }
+    });
+
+    const positions = new Map<string, { latitude: number; longitude: number }>();
+    groups.forEach((group) => {
+      if (group.length === 1) {
+        const [project] = group;
+        positions.set(project.id, { latitude: project.latitude, longitude: project.longitude });
+        return;
+      }
+
+      const sorted = [...group].sort((a, b) => a.id.localeCompare(b.id));
+      const radius = 0.02;
+      sorted.forEach((project, index) => {
+        const angle = (2 * Math.PI * index) / sorted.length;
+        positions.set(project.id, {
+          latitude: project.latitude + Math.sin(angle) * radius,
+          longitude: project.longitude + Math.cos(angle) * radius,
+        });
+      });
+    });
+
+    return positions;
+  }, [projects]);
   const bounds = useMemo(() => {
     if (!projects.length) {
       return null;
@@ -244,6 +281,10 @@ export default function PortfolioMap({
           }}
         />
         {projects.map((project) => {
+          const displayPosition = displayPositions.get(project.id) ?? {
+            latitude: project.latitude,
+            longitude: project.longitude,
+          };
           const isSelected = project.id === selectedProjectId;
           const isHovered = project.id === hoveredProjectId;
           const isActive = isSelected || isHovered;
@@ -256,7 +297,7 @@ export default function PortfolioMap({
           return (
             <CircleMarker
               key={project.id}
-              center={[project.latitude, project.longitude]}
+              center={[displayPosition.latitude, displayPosition.longitude]}
               radius={radius}
               pathOptions={{
                 color,
