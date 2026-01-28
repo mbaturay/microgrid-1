@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { MapContainer, TileLayer, CircleMarker, useMap, useMapEvent } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, useMapEvent } from 'react-leaflet';
 import L from 'leaflet';
 import { RefreshCcw } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
@@ -17,26 +17,8 @@ interface PortfolioMapProps {
   onHoverSourceChange: (source: 'map' | 'list' | null) => void;
 }
 
-function FitBounds({ projects }: { projects: Project[] }) {
-  const map = useMap();
-  const bounds = useMemo(() => {
-    if (!projects.length) {
-      return null;
-    }
-
-    return L.latLngBounds(projects.map((project) => [project.latitude, project.longitude]));
-  }, [projects]);
-
-  useEffect(() => {
-    if (!bounds) {
-      return;
-    }
-
-    map.fitBounds(bounds, { padding: [40, 40] });
-  }, [bounds, map]);
-
-  return null;
-}
+const DEFAULT_ZOOM = 5;
+const MAX_AUTO_ZOOM = 6;
 
 function EnableScrollOnClick({
   onEnable,
@@ -65,6 +47,7 @@ export default function PortfolioMap({
   const [hasInteracted, setHasInteracted] = useState(false);
   const hoverTimeoutRef = useRef<number | null>(null);
   const latestHoverRef = useRef<string | null>(null);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const bounds = useMemo(() => {
     if (!projects.length) {
       return null;
@@ -72,12 +55,57 @@ export default function PortfolioMap({
 
     return L.latLngBounds(projects.map((project) => [project.latitude, project.longitude]));
   }, [projects]);
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
+    updatePreference();
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', updatePreference);
+      return () => mediaQuery.removeEventListener('change', updatePreference);
+    }
+
+    mediaQuery.addListener(updatePreference);
+    return () => mediaQuery.removeListener(updatePreference);
+  }, []);
 
   useEffect(() => {
-    if (mapRef.current && bounds) {
-      mapRef.current.fitBounds(bounds, { padding: [40, 40] });
+    if (!mapRef.current) {
+      return;
     }
-  }, [bounds]);
+
+    const visibleProjects = projects;
+    if (visibleProjects.length === 0) {
+      return;
+    }
+
+    const map = mapRef.current;
+    if (visibleProjects.length === 1) {
+      const project = visibleProjects[0];
+      if (prefersReducedMotion) {
+        map.setView([project.latitude, project.longitude], DEFAULT_ZOOM, { animate: false });
+      } else {
+        map.flyTo([project.latitude, project.longitude], DEFAULT_ZOOM, { duration: 0.25 });
+      }
+      return;
+    }
+
+    const bounds = L.latLngBounds(visibleProjects.map((project) => [project.latitude, project.longitude]));
+    if (prefersReducedMotion) {
+      map.fitBounds(bounds, { padding: [40, 40], animate: false });
+    } else {
+      map.fitBounds(bounds, { padding: [40, 40], animate: true, duration: 0.25 });
+    }
+
+    const zoom = map.getZoom();
+    if (zoom > MAX_AUTO_ZOOM) {
+      map.setZoom(MAX_AUTO_ZOOM);
+    }
+  }, [projects, prefersReducedMotion]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -147,7 +175,7 @@ export default function PortfolioMap({
         scrollWheelZoom={isScrollZoomEnabled}
         zoomControl={false}
         center={[39.5, -98.35]}
-        zoom={4}
+        zoom={DEFAULT_ZOOM}
         wheelPxPerZoomLevel={140}
         ref={mapRef}
         whenReady={() => {
@@ -173,7 +201,6 @@ export default function PortfolioMap({
             }
           }}
         />
-        <FitBounds projects={projects} />
         {projects.map((project) => {
           const isSelected = project.id === selectedProjectId;
           const isHovered = project.id === hoveredProjectId;
