@@ -4,7 +4,7 @@ import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Button } from '@/app/components/ui/button';
 import { motion } from 'motion/react';
-import { DollarSign, TrendingUp, Clock, Zap, MapPin, Calendar } from 'lucide-react';
+import { DollarSign, TrendingUp, Clock, Zap, MapPin, Calendar, Lock } from 'lucide-react';
 import { LiveOutputsPanel } from '@/app/components/LiveOutputsPanel';
 
 interface OverviewTabProps {
@@ -53,6 +53,7 @@ export function OverviewTab({
   const isPreviewMode = trackMode === 'preview';
   const isPreviewing = isPreviewMode && previewTrack && previewTrack !== (project.track ?? 1);
   const isExecutiveLens = lens === 'executive';
+  const isSiteTeamEditable = lens === 'practitioner';
 
   const updateDraft = (partial: Partial<SiteTeam>) => {
     setDraftSiteTeam((prev) => ({ ...prev, ...partial }));
@@ -113,6 +114,12 @@ export function OverviewTab({
       setDraftSiteTeam(project.meta?.siteTeam ?? emptySiteTeam);
     }
   }, [project, isEditingSiteTeam]);
+
+  useEffect(() => {
+    if (!isSiteTeamEditable && isEditingSiteTeam) {
+      setIsEditingSiteTeam(false);
+    }
+  }, [isSiteTeamEditable, isEditingSiteTeam]);
 
   const renderList = (items?: string[]) => {
     if (!items || items.length === 0) {
@@ -202,7 +209,7 @@ export function OverviewTab({
               <h2 className="text-xl font-bold text-[var(--ef-black)]">Site Team</h2>
               <p className="text-sm text-gray-600">Key contacts for this project.</p>
             </div>
-            {!isEditingSiteTeam && (
+            {!isEditingSiteTeam && isSiteTeamEditable && (
               <Button variant="outline" size="sm" onClick={() => setIsEditingSiteTeam(true)}>
                 Edit
               </Button>
@@ -436,24 +443,49 @@ export function OverviewTab({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <h3 className="font-semibold text-lg text-[var(--ef-black)] mb-4">Next Steps</h3>
+          <h3 className="font-semibold text-lg text-[var(--ef-black)] mb-4">
+            {isExecutiveLens ? 'Project Readiness' : 'Next Steps'}
+          </h3>
           <ul className="space-y-2">
-            <li className="flex items-start gap-2">
-              <span className="text-[var(--ef-jade)] mt-1">✓</span>
-              <span className="text-gray-700">Review and update Model Variables for accurate calculations</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-[var(--ef-jade)] mt-1">✓</span>
-              <span className="text-gray-700">Upload interval data CSV with timestamp and kW/kWh columns</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-[var(--ef-jade)] mt-1">✓</span>
-              <span className="text-gray-700">Fine-tune consumption module based on track requirements</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-[var(--ef-jade)] mt-1">✓</span>
-              <span className="text-gray-700">Export results when calculations are complete</span>
-            </li>
+            {isExecutiveLens ? (
+              <>
+                <li className="flex items-start gap-2">
+                  <span className="text-gray-500 mt-1">•</span>
+                  <span className="text-gray-700">Model assumptions are still being refined</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-gray-500 mt-1">•</span>
+                  <span className="text-gray-700">Interval data has not yet been uploaded</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-gray-500 mt-1">•</span>
+                  <span className="text-gray-700">Results are preliminary and subject to change</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-gray-500 mt-1">•</span>
+                  <span className="text-gray-700">Scenario selection is under review</span>
+                </li>
+              </>
+            ) : (
+              <>
+                <li className="flex items-start gap-2">
+                  <span className="text-[var(--ef-jade)] mt-1">✓</span>
+                  <span className="text-gray-700">Review and update Model Variables for accurate calculations</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[var(--ef-jade)] mt-1">✓</span>
+                  <span className="text-gray-700">Upload interval data CSV with timestamp and kW/kWh columns</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[var(--ef-jade)] mt-1">✓</span>
+                  <span className="text-gray-700">Fine-tune consumption module based on track requirements</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[var(--ef-jade)] mt-1">✓</span>
+                  <span className="text-gray-700">Export results when calculations are complete</span>
+                </li>
+              </>
+            )}
           </ul>
         </motion.div>
       </div>
