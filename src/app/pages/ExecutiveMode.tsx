@@ -16,7 +16,7 @@ const PortfolioMap = dynamic(() => import('@/app/components/executive/PortfolioM
 export function ExecutiveMode() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStage, setSelectedStage] = useState<Stage>('All');
+  const [selectedStages, setSelectedStages] = useState<Stage[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<string>('All');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);
@@ -24,16 +24,52 @@ export function ExecutiveMode() {
 
   const regions = ['All', ...Array.from(new Set(mockProjects.map(p => p.location)))].sort();
 
-  // Filter projects
-  const filteredProjects = useMemo(() => {
+  const baseFilteredProjects = useMemo(() => {
     return mockProjects.filter(project => {
       const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            project.location.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStage = selectedStage === 'All' || project.stage === selectedStage;
       const matchesRegion = selectedRegion === 'All' || project.location === selectedRegion;
-      return matchesSearch && matchesStage && matchesRegion;
+      return matchesSearch && matchesRegion;
     });
-  }, [searchQuery, selectedStage, selectedRegion]);
+  }, [searchQuery, selectedRegion]);
+
+  const stageFilteredProjects = useMemo(() => {
+    if (selectedStages.length === 0) {
+      return baseFilteredProjects;
+    }
+
+    return baseFilteredProjects.filter(project => selectedStages.includes(project.stage));
+  }, [baseFilteredProjects, selectedStages]);
+
+  const stageCounts = useMemo(() => {
+    return baseFilteredProjects.reduce<Record<ProjectStage, number>>(
+      (acc, project) => {
+        acc[project.stage] = (acc[project.stage] ?? 0) + 1;
+        return acc;
+      },
+      {
+        Proposed: 0,
+        Analysis: 0,
+        'Green Ink': 0,
+        Construction: 0,
+        Complete: 0,
+      }
+    );
+  }, [baseFilteredProjects]);
+
+  const toggleStage = (stage: Stage) => {
+    if (stage === 'All') {
+      return;
+    }
+
+    setSelectedStages((prev) =>
+      prev.includes(stage) ? prev.filter((item) => item !== stage) : [...prev, stage]
+    );
+  };
+
+  const clearStages = () => {
+    setSelectedStages([]);
+  };
 
   const handleSelectProject = (projectId: string) => {
     setSelectedProjectId(projectId);
@@ -104,26 +140,39 @@ export function ExecutiveMode() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <h3 className="font-semibold text-lg text-[var(--ef-black)] mb-4">Pipeline Stages</h3>
+          <h3 className="font-semibold text-lg text-[var(--ef-black)] mb-4">
+            Pipeline Stages ({baseFilteredProjects.length})
+          </h3>
           <div className="flex gap-2 sm:gap-3 flex-wrap">
-            {STAGES.map((stage) => {
-              const count = stage === 'All' 
-                ? portfolioStats.totalProjects 
-                : pipelineCounts[stage as ProjectStage];
-              const isActive = selectedStage === stage;
+            {STAGES.filter((stage) => stage !== 'All').map((stage) => {
+              const count = stageCounts[stage as ProjectStage];
+              const isActive = selectedStages.includes(stage);
               const theme = getStageTheme(stage);
 
               return (
                 <button
                   key={stage}
-                  onClick={() => setSelectedStage(stage)}
-                  className={`px-3 sm:px-4 py-3 rounded-lg transition-all flex-1 sm:flex-initial min-w-[120px] ${theme.tileClass} ${
+                  onClick={() => toggleStage(stage)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      toggleStage(stage);
+                    }
+                  }}
+                  aria-pressed={isActive}
+                  className={`px-3 sm:px-4 py-3 rounded-lg transition-all flex-1 sm:flex-initial min-w-[120px] border ${
                     isActive
-                      ? `ring-2 ${theme.ringClass}`
-                      : 'hover:shadow-sm'
+                      ? `${theme.tileClass} ring-2 ${theme.ringClass}`
+                      : 'border-gray-200 bg-white hover:shadow-sm'
                   }`}
                 >
-                  <div className="text-xs font-semibold text-gray-600 mb-1">{stage}</div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: theme.dotColor }}
+                    />
+                    <div className="text-xs font-semibold text-gray-600">{stage}</div>
+                  </div>
                   <div className="text-xl sm:text-2xl font-bold text-[var(--ef-black)]">{count}</div>
                 </button>
               );
@@ -155,12 +204,12 @@ export function ExecutiveMode() {
                 </option>
               ))}
             </select>
-            {(searchQuery || selectedStage !== 'All' || selectedRegion !== 'All') && (
+            {(searchQuery || selectedStages.length > 0 || selectedRegion !== 'All') && (
               <Button
                 variant="outline"
                 onClick={() => {
                   setSearchQuery('');
-                  setSelectedStage('All');
+                  clearStages();
                   setSelectedRegion('All');
                 }}
               >
@@ -181,7 +230,7 @@ export function ExecutiveMode() {
           >
             <h3 className="font-semibold text-lg text-[var(--ef-black)] mb-4">Project Locations</h3>
             <div className="h-[400px] sm:h-[500px] lg:h-[600px] rounded-lg border border-gray-200 overflow-hidden">
-              {filteredProjects.length === 0 ? (
+              {stageFilteredProjects.length === 0 ? (
                 <div className="h-full w-full bg-[var(--ef-light-2)] flex items-center justify-center">
                   <div className="rounded-lg border border-dashed border-gray-300 bg-white/80 px-6 py-5 text-sm text-gray-500 shadow-sm">
                     No projects match the current filters.
@@ -190,7 +239,7 @@ export function ExecutiveMode() {
               ) : (
                 <Suspense fallback={<div className="h-full w-full bg-[var(--ef-light-2)]" />}>
                   <PortfolioMap
-                    projects={filteredProjects}
+                    projects={stageFilteredProjects}
                     selectedProjectId={selectedProjectId}
                     hoveredProjectId={hoveredProjectId}
                     onSelectProject={handleSelectProject}
@@ -210,10 +259,10 @@ export function ExecutiveMode() {
             transition={{ delay: 0.3 }}
           >
             <h3 className="font-semibold text-lg text-[var(--ef-black)] mb-4">
-              Projects ({filteredProjects.length})
+              Projects ({stageFilteredProjects.length})
             </h3>
             <ProjectsList
-              projects={filteredProjects}
+              projects={stageFilteredProjects}
               selectedProjectId={selectedProjectId}
               hoveredProjectId={hoveredProjectId}
               hoverSource={hoverSource}
