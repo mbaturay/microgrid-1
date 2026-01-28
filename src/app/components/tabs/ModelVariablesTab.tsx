@@ -80,6 +80,13 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
   const recalcTimeoutRef = useRef<number | null>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  const getSectionId = (section: string) =>
+    section
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-');
+
   const defaultValues = useMemo(() => {
     return new Map(
       mockVariables.map((variable) => [variable.id, variable.defaultValue ?? variable.value])
@@ -230,13 +237,17 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.getAttribute('data-section'));
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible[0]) {
+          const nextSection = visible[0].target.getAttribute('data-section');
+          if (nextSection) {
+            setActiveSection(nextSection);
           }
-        });
+        }
       },
-      { rootMargin: '-20% 0px -70% 0px', threshold: 0.1 }
+      { rootMargin: '-10% 0px -60% 0px', threshold: 0.4 }
     );
 
     filteredSections.forEach((section) => {
@@ -440,11 +451,13 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
                         ? 'border-[var(--ef-jade)] bg-[var(--ef-jade)]/10 text-[var(--ef-jade)]'
                         : 'border-gray-200 text-gray-600 hover:border-[var(--ef-jade)]/60'
                     }`}
+                    aria-current={isActive ? 'true' : undefined}
                     onClick={() => {
                       sectionRefs.current[section]?.scrollIntoView({
                         behavior: prefersReducedMotion ? 'auto' : 'smooth',
                         block: 'start',
                       });
+                      setActiveSection(section);
                     }}
                   >
                     {section}
@@ -461,74 +474,80 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
               const sectionVars = filteredVariables.filter(v => v.section === section);
               const sectionHelper = sectionDescriptions[section] ?? 'Adjust inputs for this section.';
               const changeCount = sectionChangeCounts.get(section) ?? 0;
+              const sectionId = getSectionId(section);
               return (
-                <AccordionItem
+                <div
                   key={section}
-                  value={section}
-                  className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm"
+                  id={sectionId}
+                  className="scroll-mt-24"
                   ref={(node) => {
                     sectionRefs.current[section] = node;
                   }}
                   data-section={section}
                 >
-                  <AccordionTrigger className="px-4 py-4 hover:bg-gray-50">
-                    <div className="flex w-full items-start justify-between gap-4 text-left">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-[var(--ef-black)]">{section}</span>
-                          {changeCount > 0 && (
-                            <span className="rounded-full bg-[var(--ef-jade)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--ef-jade)]">
-                              {changeCount} changes
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">{sectionHelper}</p>
-                      </div>
-                      <button
-                        type="button"
-                        className="text-xs font-medium text-gray-500 hover:text-[var(--ef-jade)]"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          resetSection(section);
-                        }}
-                      >
-                        Reset section
-                      </button>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-5">
-                    <div className="space-y-4 pt-2">
-                      {sectionVars.map((variable) => (
-                        <div
-                          key={variable.id}
-                          className={`group grid grid-cols-1 md:grid-cols-2 gap-3 items-start rounded-lg border border-transparent px-2 py-2 transition ${
-                            highlightedIds.includes(variable.id) ? 'border-[var(--ef-jade)]/50 bg-[var(--ef-jade)]/5' : ''
-                          }`}
-                        >
-                          <Label htmlFor={variable.id} className="text-sm font-medium text-gray-700 pt-2 flex items-center gap-2">
-                            <span>{variable.label}</span>
-                            {isChanged(variable) && <span className="h-2 w-2 rounded-full bg-[var(--ef-jade)]" />}
-                          </Label>
-                          <div className="space-y-1">
-                            <div className="relative">
-                              {renderInput(variable)}
-                              <button
-                                type="button"
-                                className="absolute right-0 top-0 -translate-y-8 opacity-0 transition group-hover:opacity-100 text-xs text-gray-500 hover:text-[var(--ef-jade)]"
-                                onClick={() => resetVariable(variable.id)}
-                              >
-                                Reset to default
-                              </button>
-                            </div>
-                            {getWarning(variable) && (
-                              <p className="text-xs text-amber-600">{getWarning(variable)}</p>
+                  <AccordionItem
+                    value={section}
+                    className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm"
+                  >
+                    <AccordionTrigger className="px-4 py-4 hover:bg-gray-50">
+                      <div className="flex w-full items-start justify-between gap-4 text-left">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-[var(--ef-black)]">{section}</span>
+                            {changeCount > 0 && (
+                              <span className="rounded-full bg-[var(--ef-jade)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--ef-jade)]">
+                                {changeCount} changes
+                              </span>
                             )}
                           </div>
+                          <p className="text-xs text-gray-500 mt-1">{sectionHelper}</p>
                         </div>
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
+                        <button
+                          type="button"
+                          className="text-xs font-medium text-gray-500 hover:text-[var(--ef-jade)]"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            resetSection(section);
+                          }}
+                        >
+                          Reset section
+                        </button>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-5">
+                      <div className="space-y-4 pt-2">
+                        {sectionVars.map((variable) => (
+                          <div
+                            key={variable.id}
+                            className={`group grid grid-cols-1 md:grid-cols-2 gap-3 items-start rounded-lg border border-transparent px-2 py-2 transition ${
+                              highlightedIds.includes(variable.id) ? 'border-[var(--ef-jade)]/50 bg-[var(--ef-jade)]/5' : ''
+                            }`}
+                          >
+                            <Label htmlFor={variable.id} className="text-sm font-medium text-gray-700 pt-2 flex items-center gap-2">
+                              <span>{variable.label}</span>
+                              {isChanged(variable) && <span className="h-2 w-2 rounded-full bg-[var(--ef-jade)]" />}
+                            </Label>
+                            <div className="space-y-1">
+                              <div className="relative">
+                                {renderInput(variable)}
+                                <button
+                                  type="button"
+                                  className="absolute right-0 top-0 -translate-y-8 opacity-0 transition group-hover:opacity-100 text-xs text-gray-500 hover:text-[var(--ef-jade)]"
+                                  onClick={() => resetVariable(variable.id)}
+                                >
+                                  Reset to default
+                                </button>
+                              </div>
+                              {getWarning(variable) && (
+                                <p className="text-xs text-amber-600">{getWarning(variable)}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </div>
               );
             })}
           </Accordion>
