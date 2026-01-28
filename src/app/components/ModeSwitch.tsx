@@ -16,7 +16,9 @@ export function ModeSwitch() {
       <motion.button
         onClick={() => {
           setLens('executive');
-          navigate('/');
+          if (location.pathname === '/') {
+            return;
+          }
         }}
         className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
           isExecutiveMode
