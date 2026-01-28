@@ -8,7 +8,7 @@ import type { Project } from '@/app/data/mockData';
 interface PortfolioMapProps {
   projects: Project[];
   selectedProjectId?: string | null;
-  onSelect: (projectId: string) => void;
+  onSelectProject: (projectId: string) => void;
 }
 
 function FitBounds({ projects }: { projects: Project[] }) {
@@ -32,7 +32,7 @@ function FitBounds({ projects }: { projects: Project[] }) {
   return null;
 }
 
-export default function PortfolioMap({ projects, selectedProjectId, onSelect }: PortfolioMapProps) {
+export default function PortfolioMap({ projects, selectedProjectId, onSelectProject }: PortfolioMapProps) {
   if (typeof window === 'undefined') {
     return null;
   }
@@ -68,7 +68,7 @@ export default function PortfolioMap({ projects, selectedProjectId, onSelect }: 
                 weight: isSelected ? 3 : 2,
               }}
               eventHandlers={{
-                click: () => onSelect(project.id),
+                click: () => onSelectProject(project.id),
               }}
             >
               <Popup>

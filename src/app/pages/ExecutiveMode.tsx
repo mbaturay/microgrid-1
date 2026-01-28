@@ -1,15 +1,16 @@
-import { useState, useMemo, Suspense, lazy } from 'react';
+import { useState, useMemo, Suspense, lazy, type ComponentType } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { Search, TrendingUp, Zap, DollarSign, Target, Clock } from 'lucide-react';
 import { ModeSwitch } from '@/app/components/ModeSwitch';
 import { KPICard } from '@/app/components/KPICard';
-import { StageBadge } from '@/app/components/StageBadge';
 import { mockProjects, portfolioStats, pipelineCounts, ProjectStage } from '@/app/data/mockData';
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
+import { ProjectsList } from '@/app/components/executive/ProjectsList';
 
-const PortfolioMap = lazy(() => import('@/app/components/executive/PortfolioMap'));
+const dynamic = <T extends ComponentType<any>>(loader: () => Promise<{ default: T }>) => lazy(loader);
+const PortfolioMap = dynamic(() => import('@/app/components/executive/PortfolioMap'));
 
 export function ExecutiveMode() {
   const navigate = useNavigate();
@@ -181,7 +182,7 @@ export function ExecutiveMode() {
                 <PortfolioMap
                   projects={filteredProjects}
                   selectedProjectId={selectedProjectId}
-                  onSelect={handleSelectProject}
+                  onSelectProject={handleSelectProject}
                 />
               </Suspense>
             </div>
@@ -197,53 +198,11 @@ export function ExecutiveMode() {
             <h3 className="font-semibold text-lg text-[var(--ef-black)] mb-4">
               Projects ({filteredProjects.length})
             </h3>
-            <div className="space-y-3 max-h-[400px] sm:max-h-[500px] lg:max-h-[600px] overflow-y-auto pr-2">
-              {filteredProjects.map((project, idx) => (
-                <motion.div
-                  key={project.id}
-                  className={`p-3 sm:p-4 rounded-lg border transition-all cursor-pointer group ${
-                    selectedProjectId === project.id
-                      ? 'border-[var(--ef-jade)] shadow-md'
-                      : 'border-gray-200 hover:border-[var(--ef-jade)] hover:shadow-md'
-                  }`}
-                  onClick={() => handleSelectProject(project.id)}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 + idx * 0.05 }}
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <div className="flex items-start justify-between mb-2 gap-2">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-[var(--ef-black)] group-hover:text-[var(--ef-jade)] transition-colors truncate">
-                        {project.name}
-                      </h4>
-                      <p className="text-sm text-gray-600">{project.location}</p>
-                    </div>
-                    <StageBadge stage={project.stage} size="sm" />
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-3 pt-3 border-t border-gray-100">
-                    <div>
-                      <p className="text-xs text-gray-500">ROI</p>
-                      <p className="text-sm font-semibold text-[var(--ef-jade)]">{project.roi}%</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Payback</p>
-                      <p className="text-sm font-semibold text-gray-700">{project.payback} yrs</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">NPV</p>
-                      <p className="text-sm font-semibold text-gray-700">
-                        ${(project.npv / 1000000).toFixed(1)}M
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Capacity</p>
-                      <p className="text-sm font-semibold text-gray-700">{project.capacity} MW</p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+            <ProjectsList
+              projects={filteredProjects}
+              selectedProjectId={selectedProjectId}
+              onSelectProject={handleSelectProject}
+            />
           </motion.div>
         </div>
       </div>
