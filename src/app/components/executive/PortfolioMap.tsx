@@ -105,7 +105,7 @@ export default function PortfolioMap({
   }
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-lg">
+    <div className="relative h-full w-full overflow-hidden rounded-lg portfolio-map">
       <div className="absolute left-3 top-3 z-[500] rounded-lg border border-gray-200 bg-white/90 px-3 py-2 text-xs shadow-sm backdrop-blur">
         <div className="text-[11px] font-semibold text-gray-500 mb-2">Stages</div>
         <div className="space-y-1">
@@ -135,6 +135,7 @@ export default function PortfolioMap({
         zoomControl={false}
         center={[39.5, -98.35]}
         zoom={4}
+        wheelPxPerZoomLevel={140}
         ref={mapRef}
         whenReady={() => {
           if (!isScrollZoomEnabled && mapRef.current) {
