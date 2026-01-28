@@ -182,6 +182,7 @@ export default function PortfolioMap({
           const color = theme.dotColor;
           const radius = isSelected ? 11 : isHovered ? 9 : 8;
           const weight = isSelected ? 4 : isHovered ? 3 : 2;
+          const fillOpacity = isSelected ? 1 : isHovered ? 0.95 : 0.8;
 
           return (
             <CircleMarker
@@ -191,7 +192,7 @@ export default function PortfolioMap({
               pathOptions={{
                 color,
                 fillColor: color,
-                fillOpacity: 0.9,
+                fillOpacity,
                 weight,
                 className: isHovered && !isSelected ? 'portfolio-map__marker-hover' : '',
               }}
