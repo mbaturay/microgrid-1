@@ -76,9 +76,11 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [highlightedIds, setHighlightedIds] = useState<string[]>([]);
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [highlightedSectionId, setHighlightedSectionId] = useState<string | null>(null);
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const recalcTimeoutRef = useRef<number | null>(null);
+  const sectionHighlightTimeoutRef = useRef<number | null>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const scrollToSection = (section: string) => {
@@ -89,6 +91,16 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
 
     const top = node.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
     window.scrollTo({ top, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+  };
+
+  const triggerSectionHighlight = (sectionId: string) => {
+    setHighlightedSectionId(sectionId);
+    if (sectionHighlightTimeoutRef.current) {
+      window.clearTimeout(sectionHighlightTimeoutRef.current);
+    }
+    sectionHighlightTimeoutRef.current = window.setTimeout(() => {
+      setHighlightedSectionId(null);
+    }, prefersReducedMotion ? 0 : 900);
   };
 
   const getSectionId = (section: string) =>
@@ -201,6 +213,9 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
     return () => {
       if (recalcTimeoutRef.current) {
         window.clearTimeout(recalcTimeoutRef.current);
+      }
+      if (sectionHighlightTimeoutRef.current) {
+        window.clearTimeout(sectionHighlightTimeoutRef.current);
       }
     };
   }, []);
@@ -348,7 +363,7 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
           <div className="relative">
             <Input
               type="number"
-              value={variable.value}
+              value={typeof variable.value === 'boolean' ? '' : variable.value}
               onChange={(e) => handleVariableChange(variable.id, parseFloat(e.target.value))}
               className="pr-8"
               step="0.1"
@@ -364,7 +379,7 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">$</span>
             <Input
               type="number"
-              value={variable.value}
+              value={typeof variable.value === 'boolean' ? '' : variable.value}
               onChange={(e) => handleVariableChange(variable.id, parseFloat(e.target.value))}
               className="pl-7"
               step="0.01"
@@ -381,7 +396,7 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
           <div className="relative">
             <Input
               type={variable.type}
-              value={variable.value as string | number}
+              value={typeof variable.value === 'boolean' ? '' : (variable.value as string | number)}
               onChange={(e) => handleVariableChange(variable.id, variable.type === 'number' ? parseFloat(e.target.value) : e.target.value)}
               step="0.01"
               min={min}
@@ -466,6 +481,7 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
                     onClick={() => {
                       scrollToSection(section);
                       setActiveSection(section);
+                      triggerSectionHighlight(getSectionId(section));
                     }}
                   >
                     {section}
@@ -483,6 +499,7 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
               const sectionHelper = sectionDescriptions[section] ?? 'Adjust inputs for this section.';
               const changeCount = sectionChangeCounts.get(section) ?? 0;
               const sectionId = getSectionId(section);
+              const isSectionHighlighted = highlightedSectionId === sectionId;
               return (
                 <div
                   key={section}
@@ -495,7 +512,11 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
                 >
                   <AccordionItem
                     value={section}
-                    className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm"
+                    className={`border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm transition ${
+                      isSectionHighlighted
+                        ? 'ring-2 ring-[var(--ef-jade)]/20 bg-[var(--ef-jade)]/5'
+                        : ''
+                    } ${prefersReducedMotion ? '' : 'duration-200'}`}
                   >
                     <AccordionTrigger className="px-4 py-4 hover:bg-gray-50">
                       <div className="flex w-full items-start justify-between gap-4 text-left">
