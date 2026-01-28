@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap, useMapEvent } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, useMap, useMapEvent } from 'react-leaflet';
 import L from 'leaflet';
 import { RefreshCcw } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
@@ -66,6 +66,8 @@ export default function PortfolioMap({
   const mapRef = useRef<L.Map | null>(null);
   const [isScrollZoomEnabled, setIsScrollZoomEnabled] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const hoverTimeoutRef = useRef<number | null>(null);
+  const latestHoverRef = useRef<string | null>(null);
   const bounds = useMemo(() => {
     if (!projects.length) {
       return null;
@@ -99,6 +101,14 @@ export default function PortfolioMap({
       mapRef.current.scrollWheelZoom.disable();
     }
   }, [isScrollZoomEnabled]);
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        window.clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (typeof window === 'undefined') {
     return null;
@@ -166,7 +176,7 @@ export default function PortfolioMap({
           const isHovered = project.id === hoveredProjectId;
           const isActive = isSelected || isHovered;
           const color = isSelected ? 'var(--ef-jade)' : isHovered ? 'var(--ef-teal)' : '#0f766e';
-          const radius = isSelected ? 12 : isHovered ? 10 : 8;
+          const radius = isSelected ? 12 : isHovered ? 9 : 8;
 
           return (
             <CircleMarker
@@ -178,23 +188,30 @@ export default function PortfolioMap({
                 fillColor: color,
                 fillOpacity: 0.9,
                 weight: isActive ? 3 : 2,
+                className: isHovered && !isSelected ? 'portfolio-map__marker-hover' : '',
               }}
               eventHandlers={{
                 click: () => onSelectProject(project.id),
-                mouseover: () => onHoverProject(project.id),
-                mouseout: () => onHoverProject(null),
+                mouseover: () => {
+                  latestHoverRef.current = project.id;
+                  if (hoverTimeoutRef.current) {
+                    window.clearTimeout(hoverTimeoutRef.current);
+                  }
+                  hoverTimeoutRef.current = window.setTimeout(() => {
+                    onHoverProject(latestHoverRef.current);
+                  }, 100);
+                },
+                mouseout: () => {
+                  latestHoverRef.current = null;
+                  if (hoverTimeoutRef.current) {
+                    window.clearTimeout(hoverTimeoutRef.current);
+                  }
+                  hoverTimeoutRef.current = window.setTimeout(() => {
+                    onHoverProject(null);
+                  }, 100);
+                },
               }}
-            >
-              <Popup>
-                <div className="space-y-1">
-                  <div className="font-semibold text-[var(--ef-black)]">{project.name}</div>
-                  <div className="text-xs text-gray-500">{project.stage}</div>
-                  <div className="text-xs text-gray-600">ROI: {project.roi}%</div>
-                  <div className="text-xs text-gray-600">Payback: {project.payback} yrs</div>
-                  <div className="text-xs text-gray-600">Capacity: {project.capacity} MW</div>
-                </div>
-              </Popup>
-            </CircleMarker>
+            />
           );
         })}
       </MapContainer>

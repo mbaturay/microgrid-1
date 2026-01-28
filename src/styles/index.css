@@ -17,3 +17,7 @@
 	right: 8px;
 	bottom: 8px;
 }
+
+.portfolio-map .portfolio-map__marker-hover {
+	filter: drop-shadow(0 0 6px rgba(20, 184, 166, 0.5));
+}
