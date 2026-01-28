@@ -18,6 +18,7 @@ export function ExecutiveMode() {
   const [selectedStage, setSelectedStage] = useState<ProjectStage | 'All'>('All');
   const [selectedRegion, setSelectedRegion] = useState<string>('All');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);
 
   const stages: Array<ProjectStage | 'All'> = ['All', 'Proposed', 'Analysis', 'Green Ink', 'Construction', 'Complete'];
   const regions = ['All', ...Array.from(new Set(mockProjects.map(p => p.location)))].sort();
@@ -178,13 +179,23 @@ export function ExecutiveMode() {
           >
             <h3 className="font-semibold text-lg text-[var(--ef-black)] mb-4">Project Locations</h3>
             <div className="h-[400px] sm:h-[500px] lg:h-[600px] rounded-lg border border-gray-200 overflow-hidden">
-              <Suspense fallback={<div className="h-full w-full bg-[var(--ef-light-2)]" />}>
-                <PortfolioMap
-                  projects={filteredProjects}
-                  selectedProjectId={selectedProjectId}
-                  onSelectProject={handleSelectProject}
-                />
-              </Suspense>
+              {filteredProjects.length === 0 ? (
+                <div className="h-full w-full bg-[var(--ef-light-2)] flex items-center justify-center">
+                  <div className="rounded-lg border border-dashed border-gray-300 bg-white/80 px-6 py-5 text-sm text-gray-500 shadow-sm">
+                    No projects match the current filters.
+                  </div>
+                </div>
+              ) : (
+                <Suspense fallback={<div className="h-full w-full bg-[var(--ef-light-2)]" />}>
+                  <PortfolioMap
+                    projects={filteredProjects}
+                    selectedProjectId={selectedProjectId}
+                    hoveredProjectId={hoveredProjectId}
+                    onSelectProject={handleSelectProject}
+                    onHoverProject={setHoveredProjectId}
+                  />
+                </Suspense>
+              )}
             </div>
           </motion.div>
 
@@ -201,7 +212,9 @@ export function ExecutiveMode() {
             <ProjectsList
               projects={filteredProjects}
               selectedProjectId={selectedProjectId}
+              hoveredProjectId={hoveredProjectId}
               onSelectProject={handleSelectProject}
+              onHoverProject={setHoveredProjectId}
             />
           </motion.div>
         </div>
