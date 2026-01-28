@@ -412,18 +412,15 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
         );
       case 'percent':
         return (
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              value={typeof variable.value === 'boolean' ? '' : variable.value}
-              onChange={(e) => handleVariableChange(variable.id, parseFloat(e.target.value))}
-              className="flex-1"
-              step="0.1"
-              min={min}
-              max={max}
-            />
-            <span className="text-sm text-gray-500">%</span>
-          </div>
+          <Input
+            type="number"
+            value={typeof variable.value === 'boolean' ? '' : variable.value}
+            onChange={(e) => handleVariableChange(variable.id, parseFloat(e.target.value))}
+            className="w-full"
+            step="0.1"
+            min={min}
+            max={max}
+          />
         );
       case 'currency':
         return (
@@ -433,28 +430,24 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
               type="number"
               value={typeof variable.value === 'boolean' ? '' : variable.value}
               onChange={(e) => handleVariableChange(variable.id, parseFloat(e.target.value))}
-              className="flex-1"
+              className="w-full"
               step="0.01"
               min={min}
               max={max}
             />
-            {variable.unit && <span className="text-sm text-gray-500">{variable.unit}</span>}
           </div>
         );
       default:
         return (
-          <div className="flex items-center gap-2">
-            <Input
-              type={variable.type}
-              value={typeof variable.value === 'boolean' ? '' : (variable.value as string | number)}
-              onChange={(e) => handleVariableChange(variable.id, variable.type === 'number' ? parseFloat(e.target.value) : e.target.value)}
-              className="flex-1"
-              step="0.01"
-              min={min}
-              max={max}
-            />
-            {variable.unit && <span className="text-sm text-gray-500">{variable.unit}</span>}
-          </div>
+          <Input
+            type={variable.type}
+            value={typeof variable.value === 'boolean' ? '' : (variable.value as string | number)}
+            onChange={(e) => handleVariableChange(variable.id, variable.type === 'number' ? parseFloat(e.target.value) : e.target.value)}
+            className="w-full"
+            step="0.01"
+            min={min}
+            max={max}
+          />
         );
     }
   };
@@ -594,10 +587,12 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-5">
                       <div className="space-y-4 pt-2">
-                        {sectionVars.map((variable) => (
+                        {sectionVars.map((variable) => {
+                          const unitLabel = variable.type === 'percent' ? '%' : variable.unit;
+                          return (
                           <div
                             key={variable.id}
-                            className={`group grid grid-cols-1 md:grid-cols-2 gap-3 items-start rounded-lg border border-transparent px-2 py-2 transition ${
+                            className={`group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_300px_88px] gap-3 items-start rounded-lg border border-transparent px-2 py-2 transition ${
                               highlightedIds.includes(variable.id) ? 'border-[#03454D]/50 bg-[#03454D]/5' : ''
                             }`}
                           >
@@ -620,8 +615,12 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
                                 <p className="text-xs text-amber-600">{getWarning(variable)}</p>
                               )}
                             </div>
+                            <div className="text-sm text-gray-500 text-right pt-2">
+                              {unitLabel ? unitLabel : <span className="opacity-0">—</span>}
+                            </div>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </AccordionContent>
                   </AccordionItem>
