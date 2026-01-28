@@ -284,60 +284,37 @@ export function PractitionerMode() {
             <div className="text-sm text-gray-500">
               {project.lastSaved && `Last saved: ${project.lastSaved}`}
             </div>
-            <div className="flex flex-col items-end gap-2">
-              <div className="flex items-center gap-2">
-                <div
-                  className="flex items-center"
-                  title={isEditableLens ? undefined : actionTooltip}
-                  tabIndex={isEditableLens ? -1 : 0}
-                  aria-label={isEditableLens ? undefined : actionTooltip}
-                >
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleImportProject}
-                    disabled={!isEditableLens}
-                    aria-disabled={!isEditableLens}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Import Project
-                  </Button>
-                </div>
-                <div
-                  className="flex items-center"
-                  title={isEditableLens ? undefined : actionTooltip}
-                  tabIndex={isEditableLens ? -1 : 0}
-                  aria-label={isEditableLens ? undefined : actionTooltip}
-                >
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleExportProject}
-                    disabled={!isEditableLens}
-                    aria-disabled={!isEditableLens}
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Export Project
-                  </Button>
-                </div>
-                <div
-                  className="flex items-center"
-                  title={isEditableLens ? undefined : actionTooltip}
-                  tabIndex={isEditableLens ? -1 : 0}
-                  aria-label={isEditableLens ? undefined : actionTooltip}
-                >
-                  <Button
-                    size="sm"
-                    className="bg-[var(--ef-jade)] hover:bg-[var(--ef-jade)]/90 text-white"
-                    disabled={!isEditableLens}
-                    aria-disabled={!isEditableLens}
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    Save
-                  </Button>
-                </div>
-              </div>
-              <div className="text-[11px] text-gray-500">Includes all project inputs and settings.</div>
+            <div className="flex flex-col items-end gap-2 min-h-[54px]">
+              {isEditableLens && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleImportProject}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Import Project
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportProject}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Export Project
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-[var(--ef-jade)] hover:bg-[var(--ef-jade)]/90 text-white"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Save
+                    </Button>
+                  </div>
+                  <div className="text-[11px] text-gray-500">Includes all project inputs and settings.</div>
+                </>
+              )}
             </div>
           </div>
         </div>
