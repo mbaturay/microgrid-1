@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Project } from '@/app/data/mockData';
 import { LiveOutputsPanel } from '@/app/components/LiveOutputsPanel';
 import { Input } from '@/app/components/ui/input';
@@ -6,7 +6,7 @@ import { Label } from '@/app/components/ui/label';
 import { Button } from '@/app/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/app/components/ui/accordion';
 import { Switch } from '@/app/components/ui/switch';
-import { Search, RotateCcw, Download, Upload } from 'lucide-react';
+import { Search, Download, Upload } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface ModelVariablesTabProps {
@@ -17,10 +17,14 @@ interface ModelVariable {
   id: string;
   label: string;
   value: string | number | boolean;
+  defaultValue?: string | number | boolean;
   type: 'text' | 'number' | 'percent' | 'currency' | 'boolean' | 'select' | 'date';
   section: string;
   unit?: string;
   options?: string[];
+  min?: number;
+  max?: number;
+  helper?: string;
 }
 
 const mockVariables: ModelVariable[] = [
@@ -56,28 +60,247 @@ const mockVariables: ModelVariable[] = [
   { id: 'warranty_years', label: 'Warranty Period', value: 10, type: 'number', section: 'Operations & Maintenance', unit: 'years' },
 ];
 
+const sectionDescriptions: Record<string, string> = {
+  'System Configuration': 'Define core system sizing and hardware assumptions.',
+  'Financial Parameters': 'Tune cost of capital and lifecycle assumptions.',
+  'Utility Rates': 'Set grid pricing and escalation assumptions.',
+  Incentives: 'Apply credits and rebates that affect project economics.',
+  'Operations & Maintenance': 'Ongoing costs and coverage assumptions.',
+};
+
 export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [changedOnly, setChangedOnly] = useState(false);
   const [variables, setVariables] = useState(mockVariables);
+  const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [highlightedIds, setHighlightedIds] = useState<string[]>([]);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [isRecalculating, setIsRecalculating] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const recalcTimeoutRef = useRef<number | null>(null);
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const sections = Array.from(new Set(variables.map(v => v.section)));
+  const defaultValues = useMemo(() => {
+    return new Map(
+      mockVariables.map((variable) => [variable.id, variable.defaultValue ?? variable.value])
+    );
+  }, []);
 
-  const filteredVariables = variables.filter(v => {
-    const matchesSearch = v.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         v.section.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
+    updatePreference();
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', updatePreference);
+      return () => mediaQuery.removeEventListener('change', updatePreference);
+    }
+
+    mediaQuery.addListener(updatePreference);
+    return () => mediaQuery.removeListener(updatePreference);
+  }, []);
+
+  const getConstraints = (variable: ModelVariable) => {
+    let min = variable.min;
+    let max = variable.max;
+
+    if (min === undefined && ['number', 'currency', 'percent'].includes(variable.type)) {
+      min = 0;
+    }
+    if (max === undefined && variable.type === 'percent') {
+      max = 100;
+    }
+
+    return { min, max };
+  };
+
+  const normalizeValue = (variable: ModelVariable, value: any) => {
+    if (variable.type === 'boolean' || variable.type === 'select') {
+      return value;
+    }
+
+    const { min, max } = getConstraints(variable);
+    const numericValue = Number(value);
+    if (Number.isNaN(numericValue)) {
+      return value;
+    }
+
+    let nextValue = numericValue;
+    if (min !== undefined && nextValue < min) {
+      nextValue = min;
+    }
+    if (max !== undefined && nextValue > max) {
+      nextValue = max;
+    }
+
+    return nextValue;
+  };
+
+  const isChanged = (variable: ModelVariable) => {
+    const defaultValue = defaultValues.get(variable.id);
+    if (variable.type === 'number' || variable.type === 'currency' || variable.type === 'percent') {
+      return Number(variable.value) !== Number(defaultValue);
+    }
+    return variable.value !== defaultValue;
+  };
+
+  const getWarning = (variable: ModelVariable) => {
+    if (variable.type !== 'number' && variable.type !== 'currency' && variable.type !== 'percent') {
+      return null;
+    }
+
+    const value = Number(variable.value);
+    if (Number.isNaN(value)) {
+      return null;
+    }
+
+    const { max } = getConstraints(variable);
+    if (max !== undefined && value >= max * 0.9) {
+      return 'This value is unusually high.';
+    }
+    if (variable.type === 'percent' && value >= 60) {
+      return 'This value is unusually high.';
+    }
+
+    return null;
+  };
+
+  const triggerRecalc = () => {
+    setIsRecalculating(true);
+    if (recalcTimeoutRef.current) {
+      window.clearTimeout(recalcTimeoutRef.current);
+    }
+    recalcTimeoutRef.current = window.setTimeout(() => {
+      setIsRecalculating(false);
+    }, prefersReducedMotion ? 0 : 650);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (recalcTimeoutRef.current) {
+        window.clearTimeout(recalcTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const sections = Array.from(new Set(variables.map((v) => v.section)));
+
+  const filteredVariables = variables.filter((variable) => {
+    const matchesSearch =
+      variable.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      variable.section.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) {
+      return false;
+    }
+
+    if (changedOnly) {
+      return isChanged(variable);
+    }
+
+    return true;
   });
 
-  const filteredSections = sections.filter(section =>
-    filteredVariables.some(v => v.section === section)
+  const filteredSections = sections.filter((section) =>
+    filteredVariables.some((variable) => variable.section === section)
   );
 
+  const sectionChangeCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    variables.forEach((variable) => {
+      if (!isChanged(variable)) {
+        return;
+      }
+      counts.set(variable.section, (counts.get(variable.section) ?? 0) + 1);
+    });
+    return counts;
+  }, [variables]);
+
+  useEffect(() => {
+    if (filteredSections.length === 0) {
+      return;
+    }
+
+    if (!activeSection) {
+      setActiveSection(filteredSections[0]);
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.getAttribute('data-section'));
+          }
+        });
+      },
+      { rootMargin: '-20% 0px -70% 0px', threshold: 0.1 }
+    );
+
+    filteredSections.forEach((section) => {
+      const node = sectionRefs.current[section];
+      if (node) {
+        observer.observe(node);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, [filteredSections, activeSection]);
+
   const handleVariableChange = (id: string, value: any) => {
-    setVariables(prev => prev.map(v => v.id === id ? { ...v, value } : v));
+    setVariables((prev) =>
+      prev.map((variable) => {
+        if (variable.id !== id) {
+          return variable;
+        }
+
+        const nextValue = normalizeValue(variable, value);
+        return { ...variable, value: nextValue };
+      })
+    );
+    triggerRecalc();
+  };
+
+  const resetVariable = (id: string) => {
+    const defaultValue = defaultValues.get(id);
+    if (defaultValue === undefined) {
+      return;
+    }
+    setVariables((prev) => prev.map((variable) => (variable.id === id ? { ...variable, value: defaultValue } : variable)));
+    triggerRecalc();
+  };
+
+  const resetSection = (section: string) => {
+    setVariables((prev) =>
+      prev.map((variable) => {
+        if (variable.section !== section) {
+          return variable;
+        }
+        const defaultValue = defaultValues.get(variable.id);
+        if (defaultValue === undefined) {
+          return variable;
+        }
+        return { ...variable, value: defaultValue };
+      })
+    );
+    triggerRecalc();
+  };
+
+  const handleImportVariables = () => {
+    const updatedIds = variables.map((variable) => variable.id);
+    setHighlightedIds(updatedIds);
+    setImportMessage(`${updatedIds.length} variables updated`);
+    window.setTimeout(() => {
+      setHighlightedIds([]);
+      setImportMessage(null);
+    }, prefersReducedMotion ? 0 : 1800);
   };
 
   const renderInput = (variable: ModelVariable) => {
+    const { min, max } = getConstraints(variable);
+
     switch (variable.type) {
       case 'boolean':
         return (
@@ -107,6 +330,8 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
               onChange={(e) => handleVariableChange(variable.id, parseFloat(e.target.value))}
               className="pr-8"
               step="0.1"
+              min={min}
+              max={max}
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">%</span>
           </div>
@@ -121,6 +346,8 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
               onChange={(e) => handleVariableChange(variable.id, parseFloat(e.target.value))}
               className="pl-7"
               step="0.01"
+              min={min}
+              max={max}
             />
             {variable.unit && (
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">{variable.unit}</span>
@@ -135,6 +362,8 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
               value={variable.value as string | number}
               onChange={(e) => handleVariableChange(variable.id, variable.type === 'number' ? parseFloat(e.target.value) : e.target.value)}
               step="0.01"
+              min={min}
+              max={max}
             />
             {variable.unit && (
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">{variable.unit}</span>
@@ -155,17 +384,25 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-[var(--ef-black)]">Model Variables</h2>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
-                <Upload className="w-4 h-4 mr-2" />
-                Import Variables
-              </Button>
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Export Variables
-              </Button>
+            <div className="flex flex-col items-end gap-1">
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleImportVariables}>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Import Variables
+                </Button>
+                <Button variant="outline" size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export Variables
+                </Button>
+              </div>
+              <span className="text-[11px] text-gray-500">Reuse assumptions across projects.</span>
             </div>
           </div>
+          {importMessage && (
+            <div className="mb-4 rounded-md border border-[var(--ef-jade)]/30 bg-[var(--ef-jade)]/5 px-3 py-2 text-xs text-[var(--ef-teal)]">
+              {importMessage}
+            </div>
+          )}
 
           {/* Search and Filters */}
           <div className="flex flex-col md:flex-row gap-4 mb-6 pb-6 border-b">
@@ -187,30 +424,105 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
               />
               <Label htmlFor="changed-only" className="text-sm">Show changed only</Label>
             </div>
-            <Button variant="outline" size="sm">
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Reset to Default
-            </Button>
+          </div>
+
+          <div className="sticky top-0 z-10 -mx-2 mb-4 bg-white/95 px-2 py-3 backdrop-blur">
+            <div className="flex flex-wrap gap-2">
+              {filteredSections.map((section) => {
+                const isActive = activeSection === section;
+                const count = sectionChangeCounts.get(section) ?? 0;
+                return (
+                  <button
+                    key={section}
+                    type="button"
+                    className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                      isActive
+                        ? 'border-[var(--ef-jade)] bg-[var(--ef-jade)]/10 text-[var(--ef-jade)]'
+                        : 'border-gray-200 text-gray-600 hover:border-[var(--ef-jade)]/60'
+                    }`}
+                    onClick={() => {
+                      sectionRefs.current[section]?.scrollIntoView({
+                        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+                        block: 'start',
+                      });
+                    }}
+                  >
+                    {section}
+                    {count > 0 && <span className="ml-2 rounded-full bg-[var(--ef-jade)]/20 px-2 py-0.5 text-[10px]">{count}</span>}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Variables by Section */}
-          <Accordion type="multiple" defaultValue={filteredSections} className="space-y-2">
+          <Accordion type="multiple" defaultValue={filteredSections} className="space-y-4">
             {filteredSections.map((section) => {
               const sectionVars = filteredVariables.filter(v => v.section === section);
+              const sectionHelper = sectionDescriptions[section] ?? 'Adjust inputs for this section.';
+              const changeCount = sectionChangeCounts.get(section) ?? 0;
               return (
-                <AccordionItem key={section} value={section} className="border border-gray-200 rounded-lg overflow-hidden">
-                  <AccordionTrigger className="px-4 py-3 hover:bg-gray-50">
-                    <span className="font-semibold text-[var(--ef-black)]">{section}</span>
+                <AccordionItem
+                  key={section}
+                  value={section}
+                  className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm"
+                  ref={(node) => {
+                    sectionRefs.current[section] = node;
+                  }}
+                  data-section={section}
+                >
+                  <AccordionTrigger className="px-4 py-4 hover:bg-gray-50">
+                    <div className="flex w-full items-start justify-between gap-4 text-left">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-[var(--ef-black)]">{section}</span>
+                          {changeCount > 0 && (
+                            <span className="rounded-full bg-[var(--ef-jade)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--ef-jade)]">
+                              {changeCount} changes
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">{sectionHelper}</p>
+                      </div>
+                      <button
+                        type="button"
+                        className="text-xs font-medium text-gray-500 hover:text-[var(--ef-jade)]"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          resetSection(section);
+                        }}
+                      >
+                        Reset section
+                      </button>
+                    </div>
                   </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4">
+                  <AccordionContent className="px-4 pb-5">
                     <div className="space-y-4 pt-2">
                       {sectionVars.map((variable) => (
-                        <div key={variable.id} className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-                          <Label htmlFor={variable.id} className="text-sm font-medium text-gray-700 pt-2">
-                            {variable.label}
+                        <div
+                          key={variable.id}
+                          className={`group grid grid-cols-1 md:grid-cols-2 gap-3 items-start rounded-lg border border-transparent px-2 py-2 transition ${
+                            highlightedIds.includes(variable.id) ? 'border-[var(--ef-jade)]/50 bg-[var(--ef-jade)]/5' : ''
+                          }`}
+                        >
+                          <Label htmlFor={variable.id} className="text-sm font-medium text-gray-700 pt-2 flex items-center gap-2">
+                            <span>{variable.label}</span>
+                            {isChanged(variable) && <span className="h-2 w-2 rounded-full bg-[var(--ef-jade)]" />}
                           </Label>
-                          <div>
-                            {renderInput(variable)}
+                          <div className="space-y-1">
+                            <div className="relative">
+                              {renderInput(variable)}
+                              <button
+                                type="button"
+                                className="absolute right-0 top-0 -translate-y-8 opacity-0 transition group-hover:opacity-100 text-xs text-gray-500 hover:text-[var(--ef-jade)]"
+                                onClick={() => resetVariable(variable.id)}
+                              >
+                                Reset to default
+                              </button>
+                            </div>
+                            {getWarning(variable) && (
+                              <p className="text-xs text-amber-600">{getWarning(variable)}</p>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -225,7 +537,11 @@ export function ModelVariablesTab({ project }: ModelVariablesTabProps) {
 
       {/* Right Column: Live Outputs Panel */}
       <div className="xl:col-span-1">
-        <LiveOutputsPanel project={project} />
+        <LiveOutputsPanel
+          project={project}
+          isRecalculating={isRecalculating}
+          prefersReducedMotion={prefersReducedMotion}
+        />
       </div>
     </div>
   );
