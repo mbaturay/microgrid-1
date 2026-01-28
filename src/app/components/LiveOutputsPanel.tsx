@@ -1,0 +1,107 @@
+import { Project, ConfidenceBadge as ConfidenceType } from '@/app/data/mockData';
+import { motion } from 'motion/react';
+import { ConfidenceBadge } from '@/app/components/ConfidenceBadge';
+import { DollarSign, TrendingUp, Clock, Zap, PiggyBank, FileText } from 'lucide-react';
+
+interface LiveOutputsPanelProps {
+  project: Project;
+}
+
+interface OutputMetric {
+  label: string;
+  value: string;
+  confidence: ConfidenceType;
+  icon: React.ElementType;
+}
+
+export function LiveOutputsPanel({ project }: LiveOutputsPanelProps) {
+  const outputs: OutputMetric[] = [
+    {
+      label: 'NPV',
+      value: `$${(project.npv / 1000000).toFixed(2)}M`,
+      confidence: 'computed',
+      icon: DollarSign,
+    },
+    {
+      label: 'ROI',
+      value: `${project.roi}%`,
+      confidence: 'computed',
+      icon: TrendingUp,
+    },
+    {
+      label: 'Payback',
+      value: `${project.payback} years`,
+      confidence: 'computed',
+      icon: Clock,
+    },
+    {
+      label: 'CapEx',
+      value: `$${(project.totalInvestment / 1000000).toFixed(2)}M`,
+      confidence: 'partial',
+      icon: PiggyBank,
+    },
+    {
+      label: 'Annual Savings',
+      value: `$${(project.annualSavings / 1000).toFixed(0)}k`,
+      confidence: 'computed',
+      icon: Zap,
+    },
+    {
+      label: 'Total Tax Benefit',
+      value: `$${(project.totalTaxBenefit / 1000000).toFixed(2)}M`,
+      confidence: 'stubbed',
+      icon: FileText,
+    },
+  ];
+
+  return (
+    <motion.div
+      className="sticky top-24 bg-white rounded-xl shadow-lg border-2 border-[var(--ef-jade)]/20 p-6"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.2 }}
+    >
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="font-semibold text-lg text-[var(--ef-black)]">Live Outputs</h3>
+        <div className="w-2 h-2 rounded-full bg-[var(--ef-jade)] animate-pulse" />
+      </div>
+
+      <div className="space-y-4">
+        {outputs.map((output, idx) => {
+          const Icon = output.icon;
+          return (
+            <motion.div
+              key={output.label}
+              className="p-4 rounded-lg bg-gradient-to-br from-gray-50 to-white border border-gray-200"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 + idx * 0.05 }}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--ef-jade)]/10 flex items-center justify-center">
+                    <Icon className="w-4 h-4 text-[var(--ef-jade)]" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-600">{output.label}</span>
+                </div>
+                <ConfidenceBadge confidence={output.confidence} size="sm" />
+              </div>
+              <p className="text-2xl font-bold text-[var(--ef-black)] ml-10">{output.value}</p>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+          <div className="w-2 h-2 rounded-full bg-[var(--ef-jade)] animate-pulse" />
+          <span>Auto-updating on changes</span>
+        </div>
+        <p className="text-xs text-gray-500">
+          Values update automatically when you modify Model Variables or upload new data.
+          Confidence badges indicate data quality.
+        </p>
+      </div>
+    </motion.div>
+  );
+}
