@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap, useMapEvent } from 'react-leaflet';
 import L from 'leaflet';
 import { RefreshCcw } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import type { Project } from '@/app/data/mockData';
 
 interface PortfolioMapProps {
@@ -35,6 +36,18 @@ function FitBounds({ projects }: { projects: Project[] }) {
   return null;
 }
 
+function EnableScrollOnClick({
+  onEnable,
+}: {
+  onEnable: () => void;
+}) {
+  useMapEvent('click', () => {
+    onEnable();
+  });
+
+  return null;
+}
+
 const legendStages = [
   { label: 'Proposed', color: 'bg-gray-300' },
   { label: 'Analysis', color: 'bg-blue-500' },
@@ -51,6 +64,8 @@ export default function PortfolioMap({
   onHoverProject,
 }: PortfolioMapProps) {
   const mapRef = useRef<L.Map | null>(null);
+  const [isScrollZoomEnabled, setIsScrollZoomEnabled] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const bounds = useMemo(() => {
     if (!projects.length) {
       return null;
@@ -64,6 +79,26 @@ export default function PortfolioMap({
       mapRef.current.fitBounds(bounds, { padding: [40, 40] });
     }
   }, [bounds]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    setHasInteracted(window.sessionStorage.getItem('portfolioMapInteracted') === 'true');
+  }, []);
+
+  useEffect(() => {
+    if (!mapRef.current) {
+      return;
+    }
+
+    if (isScrollZoomEnabled) {
+      mapRef.current.scrollWheelZoom.enable();
+    } else {
+      mapRef.current.scrollWheelZoom.disable();
+    }
+  }, [isScrollZoomEnabled]);
 
   if (typeof window === 'undefined') {
     return null;
@@ -96,15 +131,33 @@ export default function PortfolioMap({
       </button>
       <MapContainer
         className="h-full w-full"
-        scrollWheelZoom={true}
+        scrollWheelZoom={isScrollZoomEnabled}
         zoomControl={false}
         center={[39.5, -98.35]}
         zoom={4}
         ref={mapRef}
+        whenReady={() => {
+          if (!isScrollZoomEnabled && mapRef.current) {
+            mapRef.current.scrollWheelZoom.disable();
+          }
+        }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <EnableScrollOnClick
+          onEnable={() => {
+            if (!isScrollZoomEnabled) {
+              setIsScrollZoomEnabled(true);
+            }
+            if (!hasInteracted) {
+              setHasInteracted(true);
+              if (typeof window !== 'undefined') {
+                window.sessionStorage.setItem('portfolioMapInteracted', 'true');
+              }
+            }
+          }}
         />
         <FitBounds projects={projects} />
         {projects.map((project) => {
@@ -144,6 +197,23 @@ export default function PortfolioMap({
           );
         })}
       </MapContainer>
+      <AnimatePresence>
+        {!hasInteracted && (
+          <motion.div
+            className="pointer-events-none absolute inset-0 z-[400] flex items-center justify-center"
+            initial={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+          >
+            <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white/85 px-4 py-2 text-xs font-medium text-gray-600 shadow-sm backdrop-blur">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-[10px]">
+                ⇵
+              </span>
+              Click map, then scroll to zoom
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
