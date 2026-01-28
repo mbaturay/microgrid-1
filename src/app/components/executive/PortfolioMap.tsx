@@ -43,6 +43,8 @@ export default function PortfolioMap({
   onHoverSourceChange,
 }: PortfolioMapProps) {
   const mapRef = useRef<L.Map | null>(null);
+  const initialFitDoneRef = useRef(false);
+  const [mapReady, setMapReady] = useState(false);
   const [isScrollZoomEnabled, setIsScrollZoomEnabled] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   const hoverTimeoutRef = useRef<number | null>(null);
@@ -72,6 +74,29 @@ export default function PortfolioMap({
     mediaQuery.addListener(updatePreference);
     return () => mediaQuery.removeListener(updatePreference);
   }, []);
+
+  const fitAllProjects = (markInitial = false) => {
+    if (!mapRef.current || !bounds) {
+      return;
+    }
+
+    mapRef.current.invalidateSize();
+    window.setTimeout(() => {
+      if (!mapRef.current || !bounds) {
+        return;
+      }
+
+      mapRef.current.fitBounds(bounds, { padding: [40, 40] });
+      const zoom = mapRef.current.getZoom();
+      if (zoom > MAX_AUTO_ZOOM) {
+        mapRef.current.setZoom(MAX_AUTO_ZOOM);
+      }
+
+      if (markInitial) {
+        initialFitDoneRef.current = true;
+      }
+    }, 1000);
+  };
 
   useEffect(() => {
     if (!mapRef.current) {
@@ -106,6 +131,14 @@ export default function PortfolioMap({
       map.setZoom(MAX_AUTO_ZOOM);
     }
   }, [projects, prefersReducedMotion]);
+
+  useEffect(() => {
+    if (!mapReady || !bounds || initialFitDoneRef.current) {
+      return;
+    }
+
+    fitAllProjects(true);
+  }, [bounds, mapReady]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -161,11 +194,7 @@ export default function PortfolioMap({
       <button
         type="button"
         className="absolute right-3 top-3 z-[500] inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white/90 text-gray-600 shadow-sm transition hover:text-[var(--ef-jade)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ef-jade)]"
-        onClick={() => {
-          if (mapRef.current && bounds) {
-            mapRef.current.fitBounds(bounds, { padding: [40, 40] });
-          }
-        }}
+        onClick={() => fitAllProjects()}
         aria-label="Reset view"
       >
         <RefreshCcw className="h-4 w-4" />
@@ -179,6 +208,19 @@ export default function PortfolioMap({
         wheelPxPerZoomLevel={140}
         ref={mapRef}
         whenReady={() => {
+          setMapReady(true);
+          if (!initialFitDoneRef.current) {
+            fitAllProjects(true);
+          }
+
+          // Fallback re-fit once tiles/layout settle
+          window.setTimeout(() => {
+            if (!mapRef.current || !bounds) {
+              return;
+            }
+            fitAllProjects(initialFitDoneRef.current ? false : true);
+          }, 1500);
+
           if (!isScrollZoomEnabled && mapRef.current) {
             mapRef.current.scrollWheelZoom.disable();
           }
