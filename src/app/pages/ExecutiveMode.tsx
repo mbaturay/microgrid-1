@@ -19,6 +19,7 @@ export function ExecutiveMode() {
   const [selectedRegion, setSelectedRegion] = useState<string>('All');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);
+  const [hoverSource, setHoverSource] = useState<'map' | 'list' | null>(null);
 
   const stages: Array<ProjectStage | 'All'> = ['All', 'Proposed', 'Analysis', 'Green Ink', 'Construction', 'Complete'];
   const regions = ['All', ...Array.from(new Set(mockProjects.map(p => p.location)))].sort();
@@ -193,6 +194,7 @@ export function ExecutiveMode() {
                     hoveredProjectId={hoveredProjectId}
                     onSelectProject={handleSelectProject}
                     onHoverProject={setHoveredProjectId}
+                    onHoverSourceChange={setHoverSource}
                   />
                 </Suspense>
               )}
@@ -213,8 +215,10 @@ export function ExecutiveMode() {
               projects={filteredProjects}
               selectedProjectId={selectedProjectId}
               hoveredProjectId={hoveredProjectId}
+              hoverSource={hoverSource}
               onSelectProject={handleSelectProject}
               onHoverProject={setHoveredProjectId}
+              onHoverSourceChange={setHoverSource}
             />
           </motion.div>
         </div>

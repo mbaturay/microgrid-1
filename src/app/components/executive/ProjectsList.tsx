@@ -9,23 +9,27 @@ interface ProjectsListProps {
   projects: Project[];
   selectedProjectId: string | null;
   hoveredProjectId: string | null;
+  hoverSource: 'map' | 'list' | null;
   onSelectProject: (projectId: string) => void;
   onHoverProject: (projectId: string | null) => void;
+  onHoverSourceChange: (source: 'map' | 'list' | null) => void;
 }
 
 export function ProjectsList({
   projects,
   selectedProjectId,
   hoveredProjectId,
+  hoverSource,
   onSelectProject,
   onHoverProject,
+  onHoverSourceChange,
 }: ProjectsListProps) {
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const highlightTimeoutRef = useRef<number | null>(null);
-  const latestHighlightRef = useRef<string | null>(null);
-  const [highlightedProjectId, setHighlightedProjectId] = useState<string | null>(null);
   const [liveMessage, setLiveMessage] = useState('');
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const lastScrollAtRef = useRef(0);
+  const lastInteractionRef = useRef<'keyboard' | 'mouse' | null>(null);
 
   const selectedIndex = useMemo(
     () => projects.findIndex((project) => project.id === selectedProjectId),
@@ -44,26 +48,30 @@ export function ProjectsList({
   }, [selectedProjectId]);
 
   useEffect(() => {
-    if (highlightTimeoutRef.current) {
-      window.clearTimeout(highlightTimeoutRef.current);
-    }
-
-    if (!hoveredProjectId) {
-      setHighlightedProjectId(null);
+    if (typeof window === 'undefined') {
       return;
     }
 
-    latestHighlightRef.current = hoveredProjectId;
-    setHighlightedProjectId(hoveredProjectId);
-    highlightTimeoutRef.current = window.setTimeout(() => {
-      if (latestHighlightRef.current === hoveredProjectId) {
-        setHighlightedProjectId(null);
-      }
-    }, 800);
-  }, [hoveredProjectId]);
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
+    updatePreference();
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', updatePreference);
+      return () => mediaQuery.removeEventListener('change', updatePreference);
+    }
+
+    mediaQuery.addListener(updatePreference);
+    return () => mediaQuery.removeListener(updatePreference);
+  }, []);
 
   useEffect(() => {
-    if (!hoveredProjectId) {
+    if (!hoveredProjectId || hoverSource !== 'map') {
+      return;
+    }
+
+    const now = Date.now();
+    if (now - lastScrollAtRef.current < 500) {
       return;
     }
 
@@ -75,19 +83,19 @@ export function ProjectsList({
 
     const containerRect = container.getBoundingClientRect();
     const nodeRect = node.getBoundingClientRect();
-    const isFullyVisible =
-      nodeRect.top >= containerRect.top && nodeRect.bottom <= containerRect.bottom;
+    const aboveThreshold = nodeRect.top < containerRect.top - 40;
+    const belowThreshold = nodeRect.bottom > containerRect.bottom + 40;
 
-    if (!isFullyVisible) {
-      node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (aboveThreshold || belowThreshold) {
+      node.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'center' });
+      lastScrollAtRef.current = now;
     }
-  }, [hoveredProjectId]);
+  }, [hoveredProjectId, hoverSource, prefersReducedMotion]);
 
   return (
     <div
       ref={containerRef}
       className="space-y-3 max-h-[400px] sm:max-h-[500px] lg:max-h-[600px] overflow-y-auto pr-2"
-      aria-live="polite"
     >
       <span className="sr-only" aria-live="polite">
         {liveMessage}
@@ -96,9 +104,10 @@ export function ProjectsList({
         const isSelected = project.id === selectedProjectId;
         const isHovered = project.id === hoveredProjectId;
         const isActive = isSelected || isHovered;
-        const isHighlighted = project.id === highlightedProjectId && !isSelected;
+        const isHighlight = isHovered && !isSelected;
         const nameId = `project-name-${project.id}`;
         const roiId = `project-roi-${project.id}`;
+        const liftClass = !prefersReducedMotion && isHighlight ? '-translate-y-[1px]' : '';
 
         return (
           <motion.div
@@ -106,34 +115,46 @@ export function ProjectsList({
             ref={(node) => {
               itemRefs.current[project.id] = node;
             }}
-            className="p-3 sm:p-4 rounded-lg border cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ef-jade)]"
+            className={`p-3 sm:p-4 rounded-lg border cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ef-jade)] ${
+              isSelected
+                ? 'border-[var(--ef-jade)] shadow-md'
+                : isHighlight
+                  ? `border-gray-200 ring-2 ring-yellow-300/40 shadow-sm ${liftClass} transition-[transform,box-shadow] duration-150 ease-out`
+                  : 'border-gray-200 hover:border-[var(--ef-jade)]'
+            }`}
             initial={{ opacity: 0, y: 16 }}
             animate={{
               opacity: 1,
-              y: isActive ? -2 : 0,
-              borderColor: isSelected
-                ? 'var(--ef-jade)'
-                : isHovered
-                  ? 'rgba(20, 184, 166, 0.8)'
-                  : 'rgba(229,231,235,1)',
-              boxShadow: isSelected
-                ? '0 12px 24px -16px rgba(2, 132, 99, 0.45)'
-                : isHighlighted
-                  ? '0 0 0 2px rgba(250, 204, 21, 0.5)'
-                  : '0 0 0 0 rgba(0,0,0,0)',
-              scale: isHighlighted ? 1.01 : 1,
+              y: prefersReducedMotion ? 0 : isSelected ? -2 : isHighlight ? -1 : 0,
             }}
-            transition={{ duration: 0.2, ease: 'easeOut', delay: 0.2 + idx * 0.02 }}
-            whileHover={{ scale: 1.01 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.18, ease: 'easeOut', delay: 0.2 + idx * 0.02 }}
+            whileHover={prefersReducedMotion ? undefined : { scale: 1.01 }}
             onClick={() => onSelectProject(project.id)}
-            onMouseEnter={() => onHoverProject(project.id)}
-            onMouseLeave={() => onHoverProject(null)}
-            onFocus={() => {
+            onMouseEnter={() => {
+              lastInteractionRef.current = 'mouse';
+              onHoverSourceChange('list');
               onHoverProject(project.id);
-              setLiveMessage(`Project ${project.name} highlighted`);
             }}
-            onBlur={() => onHoverProject(null)}
+            onMouseDown={() => {
+              lastInteractionRef.current = 'mouse';
+            }}
+            onMouseLeave={() => {
+              onHoverSourceChange(null);
+              onHoverProject(null);
+            }}
+            onFocus={() => {
+              onHoverSourceChange('list');
+              onHoverProject(project.id);
+              if (lastInteractionRef.current === 'keyboard') {
+                setLiveMessage(`Project ${project.name} highlighted`);
+              }
+            }}
+            onBlur={() => {
+              onHoverSourceChange(null);
+              onHoverProject(null);
+            }}
             onKeyDown={(event) => {
+              lastInteractionRef.current = 'keyboard';
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
                 onSelectProject(project.id);

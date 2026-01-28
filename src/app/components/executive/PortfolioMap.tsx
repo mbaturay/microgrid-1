@@ -13,6 +13,7 @@ interface PortfolioMapProps {
   hoveredProjectId?: string | null;
   onSelectProject: (projectId: string) => void;
   onHoverProject: (projectId: string | null) => void;
+  onHoverSourceChange: (source: 'map' | 'list' | null) => void;
 }
 
 function FitBounds({ projects }: { projects: Project[] }) {
@@ -62,6 +63,7 @@ export default function PortfolioMap({
   hoveredProjectId,
   onSelectProject,
   onHoverProject,
+  onHoverSourceChange,
 }: PortfolioMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const [isScrollZoomEnabled, setIsScrollZoomEnabled] = useState(false);
@@ -194,6 +196,7 @@ export default function PortfolioMap({
                 click: () => onSelectProject(project.id),
                 mouseover: () => {
                   latestHoverRef.current = project.id;
+                  onHoverSourceChange('map');
                   if (hoverTimeoutRef.current) {
                     window.clearTimeout(hoverTimeoutRef.current);
                   }
@@ -203,6 +206,7 @@ export default function PortfolioMap({
                 },
                 mouseout: () => {
                   latestHoverRef.current = null;
+                  onHoverSourceChange(null);
                   if (hoverTimeoutRef.current) {
                     window.clearTimeout(hoverTimeoutRef.current);
                   }
