@@ -413,9 +413,16 @@ export function OverviewTab({
               </div>
             )}
           </div>
-          {isPreviewing && onApplyPreviewTrack && (
+          {isExecutiveLens && (
             <div className="mt-4 flex justify-end">
-              <Button variant="outline" size="sm" onClick={onApplyPreviewTrack}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={isPreviewing ? onApplyPreviewTrack : undefined}
+                disabled={!isPreviewing}
+                aria-disabled={!isPreviewing}
+                title={!isPreviewing ? 'Already the default scenario.' : undefined}
+              >
                 Apply as default
               </Button>
             </div>
