@@ -16,8 +16,12 @@ import { ProjectsList } from '@/app/components/executive/ProjectsList';
 const dynamic = <T extends ComponentType<any>>(loader: () => Promise<{ default: T }>) => lazy(loader);
 const PortfolioMap = dynamic(() => import('@/app/components/executive/PortfolioMap'));
 
-export function ExecutiveMode() {
-  const { lens } = useProjectLens();
+export function ExecutiveMode({ forceExecutive = false, hideLensToggle = false }: { forceExecutive?: boolean, hideLensToggle?: boolean } = {}) {
+  const { lens, setLens } = useProjectLens();
+  // If forced, always use executive lens
+  const effectiveLens = forceExecutive ? 'executive' : lens;
+  // If forced, ensure context is set to executive
+  if (forceExecutive && lens !== 'executive') setLens('executive');
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStages, setSelectedStages] = useState<Stage[]>([]);
@@ -138,8 +142,9 @@ export function ExecutiveMode() {
               </div>
             </div>
             <div className="flex items-center gap-3 min-h-[36px]">
-              <ModeSwitch />
-              {lens === 'practitioner' && (
+              {/* Only show ModeSwitch if not hidden and not in portfolio context */}
+              {!hideLensToggle && <ModeSwitch />}
+              {effectiveLens === 'practitioner' && (
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm">
                     Import Project

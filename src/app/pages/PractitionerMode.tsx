@@ -15,12 +15,18 @@ import { OutputsTab } from '@/app/components/tabs/OutputsTab';
 import { computeOutputs } from '@/app/lib/projectCalculator';
 import { useProjectLens } from '@/app/lib/ProjectLensContext';
 
+import { useEffect as useReactEffect } from 'react';
 export function PractitionerMode() {
   const STORAGE_KEY = 'microgrid-projects';
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const { lens } = useProjectLens();
+  const { lens, setLens } = useProjectLens();
+    // Reset lens to executive on project entry
+    useReactEffect(() => {
+      setLens('executive');
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [projectId]);
   const isEditableLens = lens === 'practitioner';
   const [previewTrack, setPreviewTrack] = useState<Project['track'] | null>(null);
   const [previewToast, setPreviewToast] = useState<string | null>(null);
