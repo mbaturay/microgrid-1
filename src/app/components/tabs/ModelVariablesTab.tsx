@@ -393,17 +393,21 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
     switch (variable.type) {
       case 'boolean':
         return (
-          <Switch
-            checked={variable.value as boolean}
-            onCheckedChange={(checked) => handleVariableChange(variable.id, checked)}
-          />
+          <div className="w-full max-w-[240px]">
+            <Switch
+              id={variable.id}
+              checked={variable.value as boolean}
+              onCheckedChange={(checked) => handleVariableChange(variable.id, checked)}
+            />
+          </div>
         );
       case 'select':
         return (
           <select
+            id={variable.id}
             value={variable.value as string}
             onChange={(e) => handleVariableChange(variable.id, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#03454D]"
+            className="w-full max-w-[240px] px-3 py-2 border-2 border-gray-300 bg-white rounded-md text-sm focus:outline-none focus:ring-[3px] focus:ring-[#03454D]/20 focus:border-[#03454D] hover:border-gray-400 transition-all"
           >
             {variable.options?.map(opt => (
               <option key={opt} value={opt}>{opt}</option>
@@ -413,10 +417,11 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
       case 'percent':
         return (
           <Input
+            id={variable.id}
             type="number"
             value={typeof variable.value === 'boolean' ? '' : variable.value}
             onChange={(e) => handleVariableChange(variable.id, parseFloat(e.target.value))}
-            className="w-full"
+            className="w-full max-w-[240px]"
             step="0.1"
             min={min}
             max={max}
@@ -424,13 +429,14 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
         );
       case 'currency':
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full max-w-[240px]">
             <span className="text-sm text-gray-500">$</span>
             <Input
+              id={variable.id}
               type="number"
               value={typeof variable.value === 'boolean' ? '' : variable.value}
               onChange={(e) => handleVariableChange(variable.id, parseFloat(e.target.value))}
-              className="w-full"
+              className="flex-1 min-w-0"
               step="0.01"
               min={min}
               max={max}
@@ -440,10 +446,11 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
       default:
         return (
           <Input
+            id={variable.id}
             type={variable.type}
             value={typeof variable.value === 'boolean' ? '' : (variable.value as string | number)}
             onChange={(e) => handleVariableChange(variable.id, variable.type === 'number' ? parseFloat(e.target.value) : e.target.value)}
-            className="w-full"
+            className="w-full max-w-[240px]"
             step="0.01"
             min={min}
             max={max}
@@ -592,7 +599,7 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
                           return (
                           <div
                             key={variable.id}
-                            className={`group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_300px_88px] gap-3 items-start rounded-lg border border-transparent px-2 py-2 transition ${
+                            className={`group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] gap-3 items-start rounded-lg border border-transparent px-2 py-2 transition ${
                               highlightedIds.includes(variable.id) ? 'border-[#03454D]/50 bg-[#03454D]/5' : ''
                             }`}
                           >
@@ -600,23 +607,27 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
                               <span>{variable.label}</span>
                               {isChanged(variable) && <span className="h-2 w-2 rounded-full bg-[#0B8562]" />}
                             </Label>
-                            <div className="space-y-1">
-                              <div className="space-y-1">
-                                {renderInput(variable)}
-                                <button
-                                  type="button"
-                                  className="text-xs text-gray-500 hover:text-[#03454D] opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100 pl-1 text-left"
-                                  onClick={() => resetVariable(variable.id)}
-                                >
-                                  Reset to default
-                                </button>
+                            <div className="space-y-1 w-full md:w-[340px]">
+                              <div className="flex items-start gap-2">
+                                <div className="flex-1 space-y-1">
+                                  {renderInput(variable)}
+                                  <button
+                                    type="button"
+                                    className="text-xs text-gray-500 hover:text-[#03454D] opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100 pl-1 text-left"
+                                    onClick={() => resetVariable(variable.id)}
+                                  >
+                                    Reset to default
+                                  </button>
+                                </div>
+                                {unitLabel && (
+                                  <div className="text-sm text-gray-500 min-w-[48px] text-left flex items-center h-9">
+                                    {unitLabel}
+                                  </div>
+                                )}
                               </div>
                               {getWarning(variable) && (
                                 <p className="text-xs text-amber-600">{getWarning(variable)}</p>
                               )}
-                            </div>
-                            <div className="text-sm text-gray-500 text-right pt-2">
-                              {unitLabel ? unitLabel : <span className="opacity-0">—</span>}
                             </div>
                           </div>
                           );
