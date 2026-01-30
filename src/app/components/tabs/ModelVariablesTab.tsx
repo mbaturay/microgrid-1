@@ -393,9 +393,10 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
     switch (variable.type) {
       case 'boolean':
         return (
-          <div className="w-full max-w-[240px]">
+          <div className="w-[240px]">
             <Switch
               id={variable.id}
+              aria-label={variable.label}
               checked={variable.value as boolean}
               onCheckedChange={(checked) => handleVariableChange(variable.id, checked)}
             />
@@ -405,9 +406,10 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
         return (
           <select
             id={variable.id}
+            aria-label={variable.label}
             value={variable.value as string}
             onChange={(e) => handleVariableChange(variable.id, e.target.value)}
-            className="w-full max-w-[240px] px-3 py-2 border-2 border-gray-300 bg-white rounded-md text-sm focus:outline-none focus:ring-[3px] focus:ring-[#03454D]/20 focus:border-[#03454D] hover:border-gray-400 transition-all"
+            className="w-[240px] px-3 py-2 border-2 border-gray-300 bg-white rounded-md text-sm focus:outline-none focus:ring-[3px] focus:ring-[#03454D]/20 focus:border-[#03454D] hover:border-gray-400 transition-all"
           >
             {variable.options?.map(opt => (
               <option key={opt} value={opt}>{opt}</option>
@@ -418,10 +420,11 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
         return (
           <Input
             id={variable.id}
+            aria-label={variable.label}
             type="number"
             value={typeof variable.value === 'boolean' ? '' : variable.value}
             onChange={(e) => handleVariableChange(variable.id, parseFloat(e.target.value))}
-            className="w-full max-w-[240px]"
+            className="w-[240px]"
             step="0.1"
             min={min}
             max={max}
@@ -429,10 +432,11 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
         );
       case 'currency':
         return (
-          <div className="flex items-center gap-2 w-full max-w-[240px]">
-            <span className="text-sm text-gray-500">$</span>
+          <div className="flex items-center gap-2 w-[240px]">
+            <span className="text-sm text-gray-500" aria-hidden="true">$</span>
             <Input
               id={variable.id}
+              aria-label={variable.label}
               type="number"
               value={typeof variable.value === 'boolean' ? '' : variable.value}
               onChange={(e) => handleVariableChange(variable.id, parseFloat(e.target.value))}
@@ -447,10 +451,11 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
         return (
           <Input
             id={variable.id}
+            aria-label={variable.label}
             type={variable.type}
             value={typeof variable.value === 'boolean' ? '' : (variable.value as string | number)}
             onChange={(e) => handleVariableChange(variable.id, variable.type === 'number' ? parseFloat(e.target.value) : e.target.value)}
-            className="w-full max-w-[240px]"
+            className="w-[240px]"
             step="0.01"
             min={min}
             max={max}
@@ -607,9 +612,9 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
                               <span>{variable.label}</span>
                               {isChanged(variable) && <span className="h-2 w-2 rounded-full bg-[#0B8562]" />}
                             </Label>
-                            <div className="space-y-1 w-full md:w-[340px]">
-                              <div className="flex items-start gap-2">
-                                <div className="flex-1 space-y-1">
+                            <div className="space-y-1">
+                              <div className="flex items-start gap-3">
+                                <div className="space-y-1">
                                   {renderInput(variable)}
                                   <button
                                     type="button"
@@ -620,7 +625,7 @@ export function ModelVariablesTab({ project, variables, onUpdateVariables }: Mod
                                   </button>
                                 </div>
                                 {unitLabel && (
-                                  <div className="text-sm text-gray-500 min-w-[48px] text-left flex items-center h-9">
+                                  <div className="text-sm text-gray-500 w-[60px] flex items-center h-9">
                                     {unitLabel}
                                   </div>
                                 )}
